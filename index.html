@@ -217,6 +217,61 @@ select{width:100%;min-height:44px;padding:10px 12px;font:16px var(--f-body);colo
 .welcome h2{margin:0;font:700 25px/1.15 var(--f-display);letter-spacing:-.02em}
 body.onboarding .wrap > :not(.top):not(#welcome){display:none!important}
 body.onboarding #setBtn{visibility:hidden}
+.estbtn{display:grid;gap:1px;justify-items:start;background:none;border:0;padding:0;text-align:left;cursor:pointer;color:var(--hero-dim)}
+.estbtn .bl{font:400 12.5px/1.5 var(--f-mono)}
+.estbtn .more{margin-top:3px;font:600 12.5px var(--f-body);color:var(--hero-ink);text-decoration:underline;text-underline-offset:3px}
+.estpill{display:inline-block;margin-left:6px;padding:0 6px;border:1px solid currentColor;border-radius:999px;font:600 9.5px/1.5 var(--f-body);letter-spacing:.06em;text-transform:uppercase;vertical-align:1px}
+.nudge{display:flex;gap:10px;align-items:center;width:100%;text-align:left;padding:12px 14px;border-color:var(--over);background:var(--over-soft)}
+.nudge b{display:block;font-size:14.5px}
+.nudge span:not(.ins-dot){font-size:12.5px;color:var(--ink-2)}
+.ins{padding:14px 14px 6px}
+.ins-h{display:flex;justify-content:space-between;align-items:baseline;gap:10px;margin:0 2px 6px}
+.ins-h h3{margin:0;font:700 17px var(--f-display)}
+.ins-h span{font-size:12px;color:var(--ink-2)}
+.ins-row{display:grid;gap:3px;width:100%;text-align:left;background:none;border:0;border-top:1px solid var(--line);padding:11px 2px}
+.ins-row:first-child{border-top:0}
+button.ins-row:hover{background:var(--bg)}
+.ins-row p{margin:0;font-size:13px;color:var(--ink-2)}
+.ins-t{display:flex;align-items:center;gap:8px}
+.ins-t b{flex:1;min-width:0;font-size:14.5px}
+.ins-dot{flex:none;width:9px;height:9px;border-radius:50%}
+.ins-tag{flex:none;font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase}
+.ins-go{font-size:12.5px;font-weight:600;color:var(--accent)}
+.stack{display:flex;height:12px;border-radius:6px;overflow:hidden;background:var(--surface-2)}
+.stack i{display:block;height:100%}
+.stack i + i{border-left:2px solid var(--surface)}
+.brow{display:grid;grid-template-columns:12px minmax(0,1fr) auto;gap:10px;align-items:start}
+.brow .ins-dot{margin-top:6px}
+.brow b{font-size:14.5px}
+.brow p{margin:1px 0 0;font-size:12.5px;color:var(--ink-2)}
+.brow .bv{font:600 15px var(--f-display);font-variant-numeric:tabular-nums}
+.brow.total{padding-top:10px;border-top:1px solid var(--line)}
+.split{display:grid;grid-template-columns:52px minmax(0,1fr) auto;gap:10px;align-items:center;font-size:13px;font-weight:600}
+.split + .split{margin-top:10px}
+.split .sv{font:500 12px var(--f-mono);color:var(--ink-2);white-space:nowrap}
+.xcard{padding:14px 16px}
+.xcard h3{margin:0 0 4px;font:700 15px var(--f-display)}
+.xcard .hint{margin-bottom:12px}
+.wdrow{display:grid;grid-template-columns:34px minmax(0,1fr) 58px;gap:10px;align-items:center;font-size:13px;font-weight:600}
+.wdrow + .wdrow{margin-top:8px}
+.wdbar{position:relative;height:12px;border-radius:6px;background:var(--surface-2)}
+.wdbar i{display:block;height:100%;border-radius:6px;background:var(--bar)}
+.wdbar i.on{background:var(--accent)} .wdbar i.over{background:var(--over)} .wdbar i.under{background:var(--under)}
+.tmark{position:absolute;top:-3px;bottom:-3px;width:2px;background:var(--ink);opacity:.55;border-radius:1px}
+.wdrow .wv{text-align:right;font:500 12px var(--f-mono);color:var(--ink-2);font-variant-numeric:tabular-nums}
+.wdrow .wv.hi{color:var(--ink);font-weight:700}
+.trow{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr) 38px;gap:10px;align-items:center}
+.trow + .trow{margin-top:10px}
+.trow .tn{min-width:0}
+.trow .tn b{display:block;font-size:13.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.trow .tn span{font:400 11.5px var(--f-mono);color:var(--ink-2)}
+.tbar{height:10px;border-radius:5px;background:var(--surface-2);overflow:hidden}
+.tbar i{display:block;height:100%;background:var(--accent);border-radius:5px}
+.trow .tp{text-align:right;font:600 13px var(--f-display)}
+.mh-r{display:flex;align-items:center;gap:10px}
+.mini.sm{padding:5px 10px;font-size:12px;font-family:var(--f-body)}
+.chart .ra{fill:none;stroke:var(--ink);stroke-width:2;opacity:.7;stroke-linejoin:round;stroke-linecap:round}
+.chart .dt{fill:var(--surface);stroke:var(--accent);stroke-width:1.5}
 .backup{padding:14px 16px}
 .backup-body{display:grid;gap:12px;margin-top:12px}
 textarea{width:100%;min-width:0;padding:10px 12px;font:13px/1.4 var(--f-mono);color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:10px;resize:vertical}
@@ -317,12 +372,13 @@ textarea{width:100%;min-width:0;padding:10px 12px;font:13px/1.4 var(--f-mono);co
         <div>
           <p class="hero-label" id="leftLabel">Left today</p>
           <p class="left" id="left">2,000 kcal</p>
-          <p class="hero-note" id="burnNote"></p>
+          <button type="button" class="hero-note estbtn" id="burnNote" aria-label="How burn is worked out"></button>
         </div>
       </div>
       <div class="macros" id="macros"></div>
     </section>
 
+    <button type="button" class="card nudge" id="nudge" hidden></button>
     <section class="strip" id="strip" aria-label="This week"></section>
 
     <button type="button" class="primary" id="addBtn">Add food</button>
@@ -385,12 +441,16 @@ textarea{width:100%;min-width:0;padding:10px 12px;font:13px/1.4 var(--f-mono);co
       <div><h2 id="sTitle"></h2><p class="sub"><span id="sRel"></span></p></div>
       <button type="button" class="step" id="sNext" aria-label="Later">&#8250;</button>
     </nav>
+    <section class="card ins" id="insCard">
+      <div class="ins-h"><h3>Worth a look</h3><span>tap for details</span></div>
+      <div id="insList"></div>
+    </section>
     <section class="card chartcard">
       <p class="ch-label" id="c1Label">Average eaten per day</p>
       <p class="ch-big" id="c1Big">0 kcal</p>
       <p class="ch-sub" id="c1Sub"></p>
       <div class="chart" id="chart1"></div>
-      <div class="legend"><span><i style="background:var(--accent)"></i>On target</span><span><i style="background:var(--over)"></i>Over</span><span><i style="background:var(--under)"></i>Under</span><span><i style="background:none;border-top:2px dashed var(--ink-2);height:0;border-radius:0"></i>Target</span></div>
+      <div class="legend"><span><i style="background:var(--accent)"></i>On target</span><span><i style="background:var(--over)"></i>Over</span><span><i style="background:var(--under)"></i>Under</span><span><i style="background:none;border-top:2px dashed var(--ink-2);height:0;border-radius:0"></i>Target</span><span id="raLeg" hidden><i style="background:var(--ink);height:2px;border-radius:0;opacity:.7"></i>7-day average</span></div>
       <div class="pick" id="pick"><div><div class="pk-t" id="pkT"></div><div class="pk-s" id="pkS"></div></div><button type="button" class="mini" id="pkOpen">Open</button></div>
     </section>
     <section class="card chartcard">
@@ -404,6 +464,21 @@ textarea{width:100%;min-width:0;padding:10px 12px;font:13px/1.4 var(--f-mono);co
       <p class="ch-big" id="c3Big">–</p>
       <p class="ch-sub" id="c3Sub"></p>
       <div class="chart" id="chart3"></div>
+    </section>
+    <section class="card xcard" id="splitCard">
+      <h3>Where your calories come from</h3>
+      <p class="hint">Share of calories from protein, fat and carbs, on days with macros logged.</p>
+      <div id="splitBody"></div>
+    </section>
+    <section class="card xcard" id="wdCard">
+      <h3>Average by day of the week</h3>
+      <p class="hint">Logged days only. The line marks your target.</p>
+      <div id="wdList"></div>
+    </section>
+    <section class="card xcard" id="topCard">
+      <h3>Top foods by calories</h3>
+      <p class="hint">What made up the most calories in this period.</p>
+      <div id="topList"></div>
     </section>
     <dl class="tiles" id="tiles"></dl>
     <p class="est">Burn, deficit and fat change are estimates (roughly &plusmn;10%). Today isn&rsquo;t counted in the deficit until the day is over.</p>
@@ -466,6 +541,13 @@ textarea{width:100%;min-width:0;padding:10px 12px;font:13px/1.4 var(--f-mono);co
       <label class="f" for="sPerKg">kcal per kg body fat<input id="sPerKg" type="number" inputmode="numeric" min="1000"></label>
       <button type="submit" class="primary">Save settings</button>
     </form>
+  </section>
+</div>
+<div class="sheet-wrap" id="infoWrap" hidden>
+  <section class="sheet" role="dialog" aria-modal="true" aria-labelledby="infoHead">
+    <div class="grab" aria-hidden="true"></div>
+    <div class="sheet-head"><h2 id="infoHead"></h2><button type="button" class="xbtn" id="infoClose" aria-label="Close">&times;</button></div>
+    <div id="infoBody" style="display:grid;gap:12px"></div>
   </section>
 </div>
 <div class="toast" id="toast" role="status" hidden></div>
@@ -583,10 +665,9 @@ function renderDay(){
   $('leftLabel').textContent=left>=0?(cur===todayStr?'Left today':'Under target'):'Over target';
   const lf=$('left');lf.textContent=kc(Math.abs(left))+' kcal';lf.classList.toggle('over',left<0&&st==='over');
   const burn=burnOn(cur);
-  let note='Est. burn '+kc(burn)+' kcal';
-  if(t.kcal) note+=' · deficit '+kc(burn-t.kcal);
-  if(t.kcal&&cur===todayStr) note+='\nstill logging today';
-  $('burnNote').textContent=note;$('burnNote').style.whiteSpace='pre-line';
+  $('burnNote').replaceChildren(el('span',{class:'bl'},'Est. burn '+kc(burn)+' kcal',el('span',{class:'estpill',text:'est'})),
+    t.kcal?el('span',{class:'bl',text:'Deficit '+kc(burn-t.kcal)+' kcal'+(cur===todayStr?' so far':'')}):null,
+    el('span',{class:'more',text:'How is this worked out? ›'}));
 
   const mw=$('macros');mw.replaceChildren();
   [['Protein','p','--mp'],['Fat','f','--mf'],['Carbs','c','--mc']].forEach(([n,k,col])=>{
@@ -614,7 +695,7 @@ function renderDay(){
   }else for(const meal of ['Meal 1','Meal 2','Snack']){
     const ml=list.filter(f=>f.meal===meal);if(!ml.length) continue;
     const mt=totalsOf(ml),card=el('div',{class:'card meal'});
-    card.append(el('div',{class:'meal-h'},el('div',{text:meal}),el('span',{text:kc(mt.kcal)+' kcal'})));
+    card.append(el('div',{class:'meal-h'},el('div',{text:meal}),el('div',{class:'mh-r'},cur!==todayStr?el('button',{type:'button',class:'mini sm',onclick:()=>copyMeal(ml,meal)},'Copy to today'):null,el('span',{text:kc(mt.kcal)+' kcal'}))));
     for(const f of ml){
       const has=f.p!=null||f.f!=null||f.c!=null;
       card.append(el('button',{type:'button',class:'food','aria-label':'Edit '+f.name,onclick:()=>openForm(f)},
@@ -633,7 +714,23 @@ function renderDay(){
   $('gymNo').setAttribute('aria-pressed',String(dd.gym===false));
   $('gymHint').textContent=dd.gym==null?(s.gymWk?'not set, using '+s.gymWk+'/week average':''):'';
   renderQuick();
+  const nd=$('nudge');nd.hidden=true;
+  if(cur===todayStr&&S.foods.length){
+    const ins=sortIns(insightsFor(daysBetween(ymd(addDays(parse(todayStr),-13)),todayStr)).concat(globalInsights())).filter(i=>i.lvl==='watch');
+    if(ins.length){
+      nd.hidden=false;
+      nd.replaceChildren(el('span',{class:'ins-dot',style:'background:var(--over)'}),el('div',{},el('b',{text:ins[0].title}),el('span',{text:ins.length>1?'+ '+(ins.length-1)+' more worth a look':'Tap for details'})));
+      nd.onclick=()=>openInfo('Worth a look',[el('p',{class:'hint',text:'From your last 14 days.'}),...ins.map(insRow),el('button',{type:'button',class:'ghost',onclick:()=>{closeInfo();setView('stats');window.scrollTo({top:0});}},'See all in Stats')]);
+    }
+  }
 }
+function copyMeal(list,meal){
+  const copies=list.map(f=>Object.assign({},f,{id:newId(),date:todayStr}));
+  const before=S.foods;S.foods=S.foods.concat(copies);
+  if(!save()){S.foods=before;return;}
+  toast('Copied '+copies.length+' food'+(copies.length===1?'':'s')+' to today’s '+meal);renderDay();
+}
+$('burnNote').addEventListener('click',()=>openBurn(cur));
 
 /* ---------- food library + quick add ---------- */
 function library(){
@@ -769,10 +866,10 @@ function period(){
 function niceStep(v,n){const raw=v/n,p=Math.pow(10,Math.floor(Math.log10(raw))),f=raw/p;return (f<=1?1:f<=2?2:f<=2.5?2.5:f<=5?5:10)*p;}
 const tk=v=>Math.abs(v)>=1000?(v/1000).toFixed(Math.abs(v)%1000?1:0)+'k':String(Math.round(v));
 
-function barChart(box,items,target){
+function barChart(box,items,target,ra){
   const W=Math.max(260,Math.round(box.clientWidth||320)),H=200,pL=38,pR=6,pT=24,pB=34;
   const pw=W-pL-pR,ph=H-pT-pB,n=items.length,slot=pw/n;
-  const maxV=Math.max(target*1.15,...items.map(i=>i.v));
+  const maxV=Math.max(target*1.15,...items.map(i=>i.v),...(ra||[]).filter(v=>v!=null));
   const step=niceStep(maxV,4),nt=Math.ceil(maxV/step),top=step*nt,y=v=>pT+ph-(v/top)*ph;
   let g='';
   for(let k=0;k<=nt;k++){const yy=y(step*k).toFixed(1);g+='<line class="'+(k?'grid':'base')+'" x1="'+pL+'" x2="'+(W-pR)+'" y1="'+yy+'" y2="'+yy+'"/><text class="tick" x="'+(pL-7)+'" y="'+yy+'" text-anchor="end" dominant-baseline="middle">'+tk(step*k)+'</text>';}
@@ -787,16 +884,18 @@ function barChart(box,items,target){
     if(it.l2) g+='<text class="xl'+(on?' on':'')+'" x="'+cx.toFixed(1)+'" y="'+(H-pB+29)+'" text-anchor="middle">'+it.l2+'</text>';
     g+='<rect class="hit" data-key="'+it.key+'" tabindex="0" role="button" aria-label="'+it.long+': '+(it.v?kc(it.v)+' kcal':'nothing logged')+'" x="'+(pL+slot*i).toFixed(1)+'" y="'+pT+'" width="'+slot.toFixed(1)+'" height="'+(ph+pB)+'"/>';
   });
+  if(ra){let d='',pen=false;ra.forEach((v,i)=>{if(v==null){pen=false;return;}d+=(pen?'L':'M')+(pL+slot*i+slot/2).toFixed(1)+' '+y(v).toFixed(1);pen=true;});if(d) g+='<path class="ra" d="'+d+'"/>';}
   const ty=y(target).toFixed(1);
   g+='<line class="tgt" x1="'+pL+'" x2="'+(W-pR)+'" y1="'+ty+'" y2="'+ty+'"/>';
   if(!items.some(i=>i.v>0)) g+='<text class="nodata" x="'+(pL+pw/2)+'" y="'+(pT+ph/2)+'" text-anchor="middle">Nothing logged in this period</text>';
   box.innerHTML='<svg viewBox="0 0 '+W+' '+H+'" width="'+W+'" height="'+H+'" role="img" aria-label="Calories eaten chart">'+g+'</svg>';
 }
-function lineChart(box,pts,unit){
+function lineChart(box,pts,unit,dots){
   const W=Math.max(260,Math.round(box.clientWidth||320)),H=170,pL=44,pR=12,pT=18,pB=26;
   const pw=W-pL-pR,ph=H-pT-pB;
   if(pts.length<2){box.innerHTML='<svg viewBox="0 0 '+W+' 70" width="'+W+'" height="70"><text class="nodata" x="'+(W/2)+'" y="38" text-anchor="middle">'+(pts.length?'Needs at least two days to draw':'Nothing to show yet')+'</text></svg>';return;}
-  let mn=Math.min(...pts.map(p=>p.v)),mx=Math.max(...pts.map(p=>p.v));
+  const allv=pts.map(p=>p.v).concat(dots||[]);
+  let mn=Math.min(...allv),mx=Math.max(...allv);
   if(unit==='kcal'){mn=Math.min(0,mn);mx=Math.max(0,mx);}
   if(mx-mn<1){mx+=1;mn-=1;}
   const step=niceStep(mx-mn,3),lo=Math.floor(mn/step)*step,hi=Math.ceil(mx/step)*step;
@@ -806,6 +905,7 @@ function lineChart(box,pts,unit){
   const d=pts.map((p,i)=>(i?'L':'M')+x(i).toFixed(1)+' '+y(p.v).toFixed(1)).join('');
   const base=unit==='kcal'?y(0):pT+ph;
   g+='<path class="ar" d="'+d+'L'+x(pts.length-1).toFixed(1)+' '+base.toFixed(1)+'L'+x(0).toFixed(1)+' '+base.toFixed(1)+'Z"/><path class="ln" d="'+d+'"/>';
+  if(dots) dots.forEach((v,i)=>{g+='<circle class="dt" cx="'+x(i).toFixed(1)+'" cy="'+y(v).toFixed(1)+'" r="3"/>';});
   const li=pts.length-1;
   g+='<circle class="pt" cx="'+x(li).toFixed(1)+'" cy="'+y(pts[li].v).toFixed(1)+'" r="4.5"/>';
   g+='<text class="xl" x="'+x(0).toFixed(1)+'" y="'+(H-6)+'" text-anchor="start">'+pts[0].label+'</text><text class="xl" x="'+x(li).toFixed(1)+'" y="'+(H-6)+'" text-anchor="end">'+pts[li].label+'</text>';
@@ -825,7 +925,10 @@ function renderStats(){
   $('c1Big').textContent=kc(avg)+' kcal';
   $('c1Sub').textContent=logged.length+' day'+(logged.length===1?'':'s')+' logged · target '+kc(s.kcal);
   if(!P.items.some(i=>i.key===selKey)){const w=P.items.filter(i=>i.v>0);selKey=w.length?w[w.length-1].key:null;}
-  barChart($('chart1'),P.items,s.kcal);
+  let ra=null;
+  if(range==='month') ra=P.items.map(it=>{if(it.key>todayStr) return null;const w=[];for(let j=0;j<7;j++){const k=totalsOf(foodsOn(ymd(addDays(parse(it.key),-j)))).kcal;if(k>0) w.push(k);}return w.length>=3?avgOf(w):null;});
+  barChart($('chart1'),P.items,s.kcal,ra);
+  $('raLeg').hidden=!(ra&&ra.some(v=>v!=null));
   const sel=P.items.find(i=>i.key===selKey);
   $('pick').hidden=!sel;
   if(sel){
@@ -844,13 +947,14 @@ function renderStats(){
   lineChart($('chart2'),pts,'kcal');
 
   // weight
-  const wpts=P.days.filter(d=>S.days[d.key]&&S.days[d.key].weight).map(d=>({label:shortDate(parse(d.key)),v:S.days[d.key].weight}));
-  $('wCard').hidden=!wpts.length;
-  if(wpts.length){
-    const ch=wpts[wpts.length-1].v-wpts[0].v;
-    $('c3Big').textContent=wpts[wpts.length-1].v.toFixed(1)+' kg';
-    $('c3Sub').textContent=wpts.length>1?(ch>0?'+':ch<0?'−':'')+Math.abs(ch).toFixed(1)+' kg since '+wpts[0].label:'Logged on '+wpts[0].label;
-    lineChart($('chart3'),wpts,'kg');
+  const keysP=new Set(P.days.map(d=>d.key));
+  const tw=trendWeights(weightSeries()).filter(w=>keysP.has(w.key));
+  $('wCard').hidden=!tw.length;
+  if(tw.length){
+    const last=tw[tw.length-1],ch=last.v-tw[0].v;
+    $('c3Big').textContent=last.v.toFixed(1)+' kg';
+    $('c3Sub').textContent='7-day trend · '+(tw.length>1?(ch>0?'+':ch<0?'−':'')+Math.abs(ch).toFixed(1)+' kg since '+shortDate(parse(tw[0].key)):'last weigh-in '+last.raw+' kg');
+    lineChart($('chart3'),tw.map(w=>({label:shortDate(parse(w.key)),v:w.v})),'kg',tw.map(w=>w.raw));
   }
 
   // tiles
@@ -860,7 +964,7 @@ function renderStats(){
     ['Days logged',String(logged.length),range==='all'?'all time':'in this '+range],
     ['Avg est. burn',done.length?kc(burnSum/done.length)+' kcal':'–','per finished day'],
     ['On / over / under',cnt.on+' / '+cnt.over+' / '+cnt.under,'finished days, ±10% of target'],
-    ['Avg deficit',done.length?kc(def/done.length)+' kcal':'–','per finished day'],
+    ['Avg deficit (est.)',done.length?kc(def/done.length)+' kcal':'–','per finished day'],
     ['Avg protein',g1(mavg('p'))+' g','target '+g1(s.p)+' g'],
     ['Avg fat',g1(mavg('f'))+' g','target '+g1(s.f)+' g'],
     ['Avg carbs',g1(mavg('c'))+' g','target '+g1(s.c)+' g'],
@@ -868,6 +972,7 @@ function renderStats(){
   ];
   const tl=$('tiles');tl.replaceChildren();
   for(const t of tiles) tl.append(el('div',{class:'card tile'},el('dt',{text:t[0]}),el('dd',{text:t[1]},el('span',{class:'tsub',text:t[2]}))));
+  renderExtras(P);
 }
 $('chart1').addEventListener('click',e=>{const h=e.target.closest('.hit');if(!h) return;selKey=h.dataset.key;renderStats();});
 $('chart1').addEventListener('keydown',e=>{const h=e.target.closest('.hit');if(h&&(e.key==='Enter'||e.key===' ')){e.preventDefault();selKey=h.dataset.key;renderStats();}});
@@ -881,6 +986,126 @@ $('pkOpen').addEventListener('click',()=>{
 });
 let rsT=0;window.addEventListener('resize',()=>{cancelAnimationFrame(rsT);rsT=requestAnimationFrame(()=>{if(view==='stats') renderStats();});});
 
+/* ---------- insights ---------- */
+const avgOf=a=>a.length?a.reduce((x,y)=>x+y,0)/a.length:0;
+function daysBetween(a,b){const out=[];for(let d=parse(a);ymd(d)<=b;d=addDays(d,1)) out.push(dayItem(ymd(d)));return out;}
+function weightSeries(){return Object.keys(S.days).filter(k=>S.days[k].weight).sort().map(k=>({key:k,v:S.days[k].weight}));}
+function trendWeights(ws){return ws.map(w=>{const lo=ymd(addDays(parse(w.key),-6));return {key:w.key,raw:w.v,v:avgOf(ws.filter(x=>x.key>=lo&&x.key<=w.key).map(x=>x.v))};});}
+function scaleCheck(){
+  const tw=trendWeights(weightSeries());if(tw.length<2) return null;
+  const a=tw[0],b=tw[tw.length-1],span=Math.round((parse(b.key)-parse(a.key))/864e5);
+  if(span<10) return null;
+  const ds=daysBetween(a.key,b.key).filter(d=>d.logged&&d.done&&d.key<b.key);
+  if(ds.length<span*0.6) return {gap:true};
+  return {a,b,pred:-ds.reduce((x,d)=>x+d.burn-d.kcal,0)/S.settings.perKg,actual:b.v-a.v};
+}
+function insightsFor(days){
+  const s=S.settings,out=[],logged=days.filter(d=>d.logged),done=logged.filter(d=>d.done);
+  if(!logged.length) return out;
+  const firstEver=S.foods.reduce((m,f)=>f.date<m?f.date:m,'9999');
+  const missing=days.filter(d=>!d.logged&&d.key<todayStr&&d.key>=firstEver);
+  if(missing.length) out.push({lvl:'watch',title:missing.length+' day'+(missing.length>1?'s':'')+' not logged',text:'Empty days are left out of averages and the deficit, so things can look better than they are.',go:missing[0].key});
+  const big=logged.filter(d=>d.kcal>s.kcal*1.3).sort((a,b)=>b.kcal-a.kcal);
+  if(big.length) out.push({lvl:'watch',title:big.length+' big day'+(big.length>1?'s':''),text:'Over 130% of your target. Biggest was '+longDate(parse(big[0].key))+' at '+kc(big[0].kcal)+' kcal (+'+kc(big[0].kcal-s.kcal)+').',go:big[0].key});
+  const mac=(k,name,factor)=>{const ds=logged.filter(d=>d[k]>0);if(ds.length<2||!s[k]) return;const a=avgOf(ds.map(d=>d[k])),r=a/s[k];
+    if(r>1.2) out.push({lvl:'watch',title:name+' is running high',text:'Averaging '+g1(a)+' g a day vs your '+g1(s[k])+' g target. That’s about '+kc((a-s[k])*factor)+' kcal a day over plan from '+name.toLowerCase()+' alone.'});
+    else if(r<0.85){const short=ds.filter(d=>d[k]<s[k]*0.9).length;out.push({lvl:k==='p'?'watch':'note',title:name+' is low',text:'Averaging '+g1(a)+' g a day vs your '+g1(s[k])+' g target, short on '+short+' of '+ds.length+' days.'});}
+    else if(k==='p') out.push({lvl:'good',title:'Protein on track',text:'Averaging '+g1(a)+' g a day vs your '+g1(s[k])+' g target.'});};
+  mac('p','Protein',4);mac('f','Fat',9);mac('c','Carbs',4);
+  const isWe=d=>[0,6].includes(parse(d.key).getDay());
+  const we=logged.filter(isWe),wd=logged.filter(d=>!isWe(d));
+  if(we.length>=2&&wd.length>=3){const diff=avgOf(we.map(d=>d.kcal))-avgOf(wd.map(d=>d.kcal));
+    if(Math.abs(diff)>=300) out.push({lvl:'note',title:'Weekends run '+(diff>0?'higher':'lower'),text:'About '+kc(Math.abs(diff))+' kcal '+(diff>0?'more':'less')+' on Saturdays and Sundays than on weekdays.'});}
+  const keys=new Set(logged.map(d=>d.key)),fs=S.foods.filter(f=>keys.has(f.date));
+  const tot=fs.reduce((a,f)=>a+f.kcal,0),noMac=fs.filter(f=>f.p==null&&f.f==null&&f.c==null).reduce((a,f)=>a+f.kcal,0);
+  if(tot&&noMac/tot>0.1) out.push({lvl:'note',title:Math.round(noMac/tot*100)+'% of calories have no macros',text:'Calories-only entries count toward calories but not protein, fat or carbs, so your macro averages read lower than they really are.'});
+  if(done.length>=5){const def=avgOf(done.map(d=>d.burn-d.kcal)),wk=def*7/s.perKg;
+    out.push({lvl:def>=0?'good':'note',title:'About '+(def>=0?'−':'+')+Math.abs(wk).toFixed(2)+' kg a week at this pace',text:'From an average estimated '+(def>=0?'deficit':'surplus')+' of '+kc(Math.abs(def))+' kcal a day. It’s an estimate, so check it against the scale.',burn:true});}
+  return out;
+}
+function globalInsights(){
+  const out=[],sc=scaleCheck();
+  if(!sc){if(weightSeries().length<3&&S.foods.length) out.push({lvl:'note',title:'Check the estimate with the scale',text:'Log your weight a few times a week. After 10 days Plate compares your real weight trend with the estimated deficit.'});return out;}
+  if(sc.gap) return out;
+  const diff=sc.actual-sc.pred,f=v=>(v>0?'+':v<0?'−':'')+Math.abs(v).toFixed(1)+' kg';
+  if(Math.abs(diff)>0.5&&Math.abs(diff)>Math.abs(sc.pred)*0.4) out.push({lvl:'watch',title:'Scale and estimate disagree',text:'Since '+shortDate(parse(sc.a.key))+' the estimate says '+f(sc.pred)+' but your weight trend says '+f(sc.actual)+'. '+(diff>0?'Your burn may be set too high, or some food isn’t getting logged.':'You may be burning more than the estimate thinks.'),burn:true});
+  else out.push({lvl:'good',title:'Scale matches the estimate',text:'Since '+shortDate(parse(sc.a.key))+': estimate '+f(sc.pred)+', weight trend '+f(sc.actual)+'.'});
+  return out;
+}
+const LVL={watch:['Check','var(--over)'],note:['Note','var(--ink-2)'],good:['Good','var(--accent)']};
+function sortIns(a){const o={watch:0,note:1,good:2};return a.sort((x,y)=>o[x.lvl]-o[y.lvl]);}
+function insRow(it){
+  const [lab,col]=LVL[it.lvl],act=it.go||it.burn;
+  const kids=[el('div',{class:'ins-t'},el('span',{class:'ins-dot',style:'background:'+col}),el('b',{text:it.title}),el('span',{class:'ins-tag',style:'color:'+col,text:lab})),
+    el('p',{text:it.text}),act?el('span',{class:'ins-go',text:it.go?'Open '+longDate(parse(it.go))+' ›':'See how burn is worked out ›'}):null];
+  if(!act) return el('div',{class:'ins-row'},kids);
+  return el('button',{type:'button',class:'ins-row',onclick:()=>{closeInfo();if(it.go){cur=it.go;setView('day');window.scrollTo({top:0});}else openBurn(todayStr);}},kids);
+}
+
+/* ---------- info sheet + burn breakdown ---------- */
+let infoReturn=null;
+function openInfo(title,nodes){
+  $('infoHead').textContent=title;$('infoBody').replaceChildren(...nodes.filter(Boolean));
+  infoReturn=document.activeElement;$('infoWrap').hidden=false;document.body.style.overflow='hidden';$('infoClose').focus();
+}
+function closeInfo(){if($('infoWrap').hidden) return;$('infoWrap').hidden=true;document.body.style.overflow='';if(infoReturn&&infoReturn.focus) infoReturn.focus({preventScroll:true});}
+$('infoClose').addEventListener('click',closeInfo);
+$('infoWrap').addEventListener('click',e=>{if(e.target===$('infoWrap')) closeInfo();});
+function burnParts(date){
+  const s=S.settings,d=S.days[date]||{},steps=stepsOn(date);
+  const parts=[{n:'Body at rest + daily life',v:s.bmr*s.mult,why:'BMR '+kc(s.bmr)+' × '+s.mult+', covers normal moving around and digesting food'}];
+  if(s.stand) parts.push({n:'Standing at work',v:s.stand,why:'Extra for being on your feet, set in Settings'});
+  parts.push({n:'Steps',v:Math.max(0,steps-s.base)*s.per,why:kc(steps)+' steps ('+(d.steps!=null?'logged':'your usual')+'). The first '+kc(s.base)+' are already in the line above, then '+s.per+' kcal per step'});
+  let gv=s.gym*s.gymWk/7,gw='No gym logged, so it uses your average of '+s.gymWk+' a week spread over 7 days';
+  if(d.gym===true){gv=s.gym;gw='Marked as trained';} else if(d.gym===false){gv=0;gw='Marked as a rest day';}
+  parts.push({n:'Gym',v:gv,why:gw});
+  return parts;
+}
+const PCOL=['var(--accent)','var(--mc)','var(--mf)','var(--mp)'];
+function openBurn(date){
+  const parts=burnParts(date),tot=parts.reduce((a,p)=>a+p.v,0)||1,t=totalsOf(foodsOn(date)).kcal;
+  openInfo('Burn on '+longDate(parse(date)),[
+    el('p',{class:'hint',text:'An estimate, roughly ±10%. If your weight trend doesn’t match the deficit over a couple of weeks, tweak these numbers.'}),
+    el('div',{class:'stack'},parts.map((p,i)=>el('i',{style:'width:'+(p.v/tot*100)+'%;background:'+PCOL[i%4]}))),
+    ...parts.map((p,i)=>el('div',{class:'brow'},el('span',{class:'ins-dot',style:'background:'+PCOL[i%4]}),el('div',{},el('b',{text:p.n}),el('p',{text:p.why})),el('span',{class:'bv',text:kc(p.v)}))),
+    el('div',{class:'brow total'},el('span'),el('b',{text:'Estimated burn'}),el('span',{class:'bv',text:kc(tot)+' kcal'})),
+    t?el('p',{class:'hint',text:'Eaten '+kc(t)+' kcal, so the estimated deficit is '+kc(tot-t)+' kcal'+(date===todayStr?' so far today.':'.')}):null,
+    el('button',{type:'button',class:'ghost',onclick:()=>{closeInfo();openSettings();}},'Adjust in Settings')]);
+}
+
+/* ---------- extra stats ---------- */
+function renderExtras(P){
+  const s=S.settings,logged=P.days.filter(d=>d.logged);
+  const ins=sortIns(insightsFor(P.days).concat(globalInsights())).slice(0,9),il=$('insList');il.replaceChildren();
+  if(!ins.length) il.append(el('p',{class:'hint',style:'margin:4px 2px 10px',text:'Log a few days to see highlights here.'}));
+  else for(const it of ins) il.append(insRow(it));
+
+  const md=logged.filter(d=>d.p>0||d.f>0||d.c>0);
+  const sp=md.reduce((a,d)=>a+d.p*4,0),sf=md.reduce((a,d)=>a+d.f*9,0),sc=md.reduce((a,d)=>a+d.c*4,0),sm=sp+sf+sc;
+  const tp=s.p*4,tf=s.f*9,tc=s.c*4,tm=tp+tf+tc||1;
+  $('splitCard').hidden=!sm;
+  if(sm){
+    const row=(lab,a,b,c,m)=>el('div',{class:'split'},el('span',{text:lab}),el('div',{class:'stack'},el('i',{style:'width:'+(a/m*100)+'%;background:var(--mp)'}),el('i',{style:'width:'+(b/m*100)+'%;background:var(--mf)'}),el('i',{style:'width:'+(c/m*100)+'%;background:var(--mc)'})),el('span',{class:'sv',text:Math.round(a/m*100)+' / '+Math.round(b/m*100)+' / '+Math.round(c/m*100)+'%'}));
+    $('splitBody').replaceChildren(row('You',sp,sf,sc,sm),row('Target',tp,tf,tc,tm),el('div',{class:'legend'},el('span',{},el('i',{style:'background:var(--mp)'}),'Protein'),el('span',{},el('i',{style:'background:var(--mf)'}),'Fat'),el('span',{},el('i',{style:'background:var(--mc)'}),'Carbs')));
+  }
+
+  const wd=[[],[],[],[],[],[],[]];for(const d of logged) wd[(parse(d.key).getDay()+6)%7].push(d.kcal);
+  const av=wd.map(a=>avgOf(a)),mx=Math.max(s.kcal*1.25,...av),hi=av.indexOf(Math.max(...av));
+  $('wdCard').hidden=logged.length<4;
+  const wl=$('wdList');wl.replaceChildren();
+  DAYS.forEach((dn,i)=>wl.append(el('div',{class:'wdrow'},el('span',{text:dn}),
+    el('div',{class:'wdbar'},el('i',{class:statusOf(av[i])||'',style:'width:'+(av[i]/mx*100)+'%'}),el('b',{class:'tmark',style:'left:'+(s.kcal/mx*100)+'%'})),
+    el('span',{class:'wv'+(i===hi&&av[i]?' hi':''),text:av[i]?kc(av[i]):'–'}))));
+
+  const keys=new Set(logged.map(d=>d.key)),agg=new Map();
+  for(const f of S.foods){if(!keys.has(f.date)) continue;const k=f.name.trim().toLowerCase(),e=agg.get(k)||{name:f.name,kcal:0,n:0};e.kcal+=f.kcal;e.n++;agg.set(k,e);}
+  const all=Array.from(agg.values()),tot=all.reduce((a,e)=>a+e.kcal,0),top=all.sort((a,b)=>b.kcal-a.kcal).slice(0,6);
+  $('topCard').hidden=!top.length;
+  const tl=$('topList');tl.replaceChildren();
+  for(const e of top) tl.append(el('div',{class:'trow'},el('div',{class:'tn'},el('b',{text:e.name,title:e.name}),el('span',{text:e.n+'× · '+kc(e.kcal)+' kcal'})),
+    el('div',{class:'tbar'},el('i',{style:'width:'+(e.kcal/top[0].kcal*100)+'%'})),el('span',{class:'tp',text:Math.round(e.kcal/tot*100)+'%'})));
+}
+
 /* ---------- settings ---------- */
 const SET_FIELDS=[['sName','name'],['sSex','sex'],['sAge','age'],['sHeight','height'],['sWeight','weight'],['sKcal','kcal'],['sP','p'],['sF','f'],['sC','c'],['sBmr','bmr'],['sMult','mult'],['sStand','stand'],['sBase','base'],['sPer','per'],['sUsual','usual'],['sGym','gym'],['sGymWk','gymWk'],['sPerKg','perKg']];
 let setReturn=null;
@@ -893,7 +1118,7 @@ function closeSettings(){if($('setWrap').hidden) return;$('setWrap').hidden=true
 $('setBtn').addEventListener('click',openSettings);
 $('setClose').addEventListener('click',closeSettings);
 $('setWrap').addEventListener('click',e=>{if(e.target===$('setWrap')) closeSettings();});
-document.addEventListener('keydown',e=>{if(e.key==='Escape') closeSettings();});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeInfo();closeSettings();}});
 $('setForm').addEventListener('submit',e=>{
   e.preventDefault();
   const next=Object.assign({},S.settings);

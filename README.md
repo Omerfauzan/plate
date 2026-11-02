@@ -33,6 +33,7 @@ A friend was tracking everything in a spreadsheet: every food, calories, protein
 - A calorie ring against your daily target, how much is left (or how much you're over), and bars for protein, fat and carbs.
 - Estimated calories burned that day and your deficit.
 - Foods grouped into Meal 1, Meal 2 and Snack. Tap any food to edit it.
+- Looking at a past day? Copy a whole meal to today in one tap.
 - A Mon to Sun strip coloured by how each day went: on target, over or under.
 - Weight, steps and gym for the day, which feed into the burn estimate.
 
@@ -46,6 +47,23 @@ A friend was tracking everything in a spreadsheet: every food, calories, protein
 - Calories eaten against target as a bar chart. Tap a bar to see that day or week and jump to it.
 - Running estimated deficit, and a weight trend once you log weight.
 - Days logged, days on target / over / under, average burn, average deficit, and average protein, fat and carbs against your targets.
+- A 7-day rolling average over the monthly chart, and a smoothed 7-day weight trend with your actual weigh-ins as dots.
+- Where your calories come from (% protein / fat / carbs) next to your target split.
+- Average calories by day of the week, and your top foods by calories.
+
+**Worth a look**
+- Plate points out things that need attention, each tagged Check, Note or Good:
+  - days you didn't log (they skew averages)
+  - big days over 130% of target
+  - macros running well over or under target
+  - weekends running higher than weekdays
+  - how much of your intake has no macros logged
+  - your estimated weekly pace in kg
+- **Scale check:** once you have a few weigh-ins over 10+ days, it compares your real weight trend with the estimated deficit. If they're far apart, it tells you so, since the burn settings may need adjusting or something isn't getting logged.
+- Tap an insight to jump to the day it's about. The most important ones also show up on the Today screen.
+
+**Estimates you can see into**
+- Every estimated number is marked "est". Tap the burn on the Today screen to see exactly how it's worked out (base, standing, steps, gym) with your numbers, and a shortcut to adjust them.
 
 **Setup and settings**
 - On first open it asks for your details and activity, then works out your BMR and everyday burn.
@@ -114,7 +132,7 @@ Then open http://localhost:8000.
 
 ## Updating
 
-If you change `index.html`, bump the `CACHE` name in `sw.js` (for example `plate-v2` to `plate-v3`). Otherwise phones keep showing the cached old version. After pushing, close and reopen the app twice to pick up the update.
+If you change `index.html`, bump the `CACHE` name in `sw.js` (for example `plate-v3` to `plate-v4`). Otherwise phones keep showing the cached old version. After pushing, close and reopen the app twice to pick up the update.
 
 ---
 
