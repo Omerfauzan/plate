@@ -98,7 +98,7 @@ No frameworks and no build step, just plain HTML, CSS and JavaScript.
 
 - Data is stored in `localStorage` under keys starting with `plate-`.
 - Charts are plain SVG, with no chart library.
-- Light and dark mode follow the phone's setting.
+- Light and dark mode follow the phone's setting by default. Tap the sun/moon button at the top, or pick Auto / Light / Dark in Settings, to choose one yourself.
 
 ## Run it locally
 
@@ -114,7 +114,7 @@ Then open http://localhost:8000.
 
 ## Updating
 
-If you change `index.html`, bump the `CACHE` name in `sw.js` (for example `plate-v1` to `plate-v2`). Otherwise phones keep showing the cached old version. After pushing, close and reopen the app twice to pick up the update.
+If you change `index.html`, bump the `CACHE` name in `sw.js` (for example `plate-v2` to `plate-v3`). Otherwise phones keep showing the cached old version. After pushing, close and reopen the app twice to pick up the update.
 
 ---
 

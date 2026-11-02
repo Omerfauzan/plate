@@ -10,6 +10,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Plate">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
+<script>try{var t=localStorage.getItem('plate-theme');if(t==='dark'||t==='light'){document.documentElement.setAttribute('data-theme',t);}}catch(e){}</script>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="icon-180.png?v=1">
 <link rel="icon" type="image/png" href="icon-192.png?v=1">
@@ -65,6 +66,9 @@ button:disabled{cursor:default;opacity:.45}
 .card{background:var(--surface);border:1px solid var(--line);border-radius:16px}
 .top{display:flex;justify-content:space-between;align-items:center;gap:12px}
 .brand{margin:0;font:700 19px var(--f-display);letter-spacing:-.01em}
+.hdr-r{display:flex;align-items:center;gap:8px}
+.iconbtn{width:40px;height:40px;display:grid;place-items:center;border:1px solid var(--line);background:var(--surface);border-radius:50%;color:var(--ink)}
+.iconbtn svg{width:19px;height:19px}
 .pill{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:7px 14px;font-weight:600;font-size:13.5px}
 .tabs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:4px;padding:4px;background:var(--surface-2);border-radius:14px}
 .tabs.three{grid-template-columns:repeat(3,minmax(0,1fr))}
@@ -225,7 +229,10 @@ textarea{width:100%;min-width:0;padding:10px 12px;font:13px/1.4 var(--f-mono);co
 <main class="wrap">
   <header class="top">
     <p class="brand">Plate</p>
-    <button type="button" class="pill" id="setBtn">Settings</button>
+    <div class="hdr-r">
+      <button type="button" class="iconbtn" id="themeBtn" aria-label="Switch to dark mode" title="Switch theme"></button>
+      <button type="button" class="pill" id="setBtn">Settings</button>
+    </div>
   </header>
 
   <section id="welcome" class="card welcome" hidden>
@@ -421,6 +428,13 @@ textarea{width:100%;min-width:0;padding:10px 12px;font:13px/1.4 var(--f-mono);co
     <div class="grab" aria-hidden="true"></div>
     <div class="sheet-head"><h2 id="setHead">Settings</h2><button type="button" class="xbtn" id="setClose" aria-label="Close settings">&times;</button></div>
     <form id="setForm" novalidate style="display:grid;gap:12px">
+      <div class="f">Appearance
+        <div class="seg" role="radiogroup" aria-label="Appearance">
+          <label><input type="radio" name="theme" value="auto"><span>Auto</span></label>
+          <label><input type="radio" name="theme" value="light"><span>Light</span></label>
+          <label><input type="radio" name="theme" value="dark"><span>Dark</span></label>
+        </div>
+      </div>
       <label class="f" for="sName">Your name<input id="sName" type="text" maxlength="40"></label>
       <h3>Daily targets</h3>
       <label class="f" for="sKcal">Calories (kcal)<input id="sKcal" type="number" inputmode="numeric" min="500" step="10"></label>
@@ -872,6 +886,7 @@ const SET_FIELDS=[['sName','name'],['sSex','sex'],['sAge','age'],['sHeight','hei
 let setReturn=null;
 function openSettings(){
   for(const [id,k] of SET_FIELDS) $(id).value=S.settings[k];
+  themeUI();
   setReturn=document.activeElement;$('setWrap').hidden=false;document.body.style.overflow='hidden';$('setClose').focus();
 }
 function closeSettings(){if($('setWrap').hidden) return;$('setWrap').hidden=true;document.body.style.overflow='';if(setReturn&&setReturn.focus) setReturn.focus({preventScroll:true});}
@@ -982,6 +997,34 @@ $('bkRestore').addEventListener('click',()=>{
   if(!save()){S=before;return;}
   $('bkText').value='';closeForm();view==='stats'?renderStats():renderDay();toast('Restored '+d.foods.length+' foods');
 });
+
+/* ---------- theme ---------- */
+const THEME_KEY='plate-theme';
+const ICON_MOON='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5Z"/></svg>';
+const ICON_SUN='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.5v2.2M12 19.3v2.2M2.5 12h2.2M19.3 12h2.2M5.3 5.3l1.6 1.6M17.1 17.1l1.6 1.6M5.3 18.7l1.6-1.6M17.1 6.9l1.6-1.6"/></svg>';
+const darkMQ=window.matchMedia?matchMedia('(prefers-color-scheme: dark)'):null;
+function storedTheme(){try{const t=localStorage.getItem(THEME_KEY);return t==='dark'||t==='light'?t:'auto';}catch(e){return 'auto';}}
+function effTheme(){const t=document.documentElement.getAttribute('data-theme');return t||(darkMQ&&darkMQ.matches?'dark':'light');}
+function themeUI(){
+  const e=effTheme(),b=$('themeBtn');
+  b.innerHTML=e==='dark'?ICON_SUN:ICON_MOON;
+  b.setAttribute('aria-label',e==='dark'?'Switch to light mode':'Switch to dark mode');
+  const st=storedTheme();
+  for(const r of document.querySelectorAll('input[name=theme]')) r.checked=r.value===st;
+  for(const m of document.querySelectorAll('meta[name=theme-color]')){
+    if(!m.dataset.orig) m.dataset.orig=m.content;
+    m.content=st==='auto'?m.dataset.orig:(st==='dark'?'#0E1712':'#EEF1EC');
+  }
+}
+function applyTheme(t){
+  if(t==='auto') document.documentElement.removeAttribute('data-theme'); else document.documentElement.setAttribute('data-theme',t);
+  try{t==='auto'?localStorage.removeItem(THEME_KEY):localStorage.setItem(THEME_KEY,t);}catch(e){}
+  themeUI();
+}
+$('themeBtn').addEventListener('click',()=>applyTheme(effTheme()==='dark'?'light':'dark'));
+for(const r of document.querySelectorAll('input[name=theme]')) r.addEventListener('change',()=>applyTheme(r.value));
+if(darkMQ){try{darkMQ.addEventListener('change',themeUI);}catch(e){darkMQ.addListener&&darkMQ.addListener(themeUI);}}
+themeUI();
 
 /* ---------- start ---------- */
 document.addEventListener('visibilitychange',()=>{if(!document.hidden&&ymd(new Date())!==todayStr) location.reload();});
