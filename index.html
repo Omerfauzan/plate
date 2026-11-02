@@ -205,6 +205,11 @@ input[type=number]{font-family:var(--f-mono);font-size:15px}
 
 .welcome{padding:22px 18px}
 .welcome form{display:grid;gap:14px}
+.welcome h3.wh{margin:6px 0 -4px;font:700 16px var(--f-display)}
+.seg.two{grid-template-columns:repeat(2,minmax(0,1fr))}
+.estbox{padding:12px 14px;border-radius:12px;background:var(--accent-soft);font:500 13px/1.6 var(--f-mono);color:var(--ink)}
+.estbox b{font-family:var(--f-display);font-size:15px}
+select{width:100%;min-height:44px;padding:10px 12px;font:16px var(--f-body);color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:10px}
 .welcome h2{margin:0;font:700 25px/1.15 var(--f-display);letter-spacing:-.02em}
 body.onboarding .wrap > :not(.top):not(#welcome){display:none!important}
 body.onboarding #setBtn{visibility:hidden}
@@ -226,27 +231,61 @@ textarea{width:100%;min-width:0;padding:10px 12px;font:13px/1.4 var(--f-mono);co
   <section id="welcome" class="card welcome" hidden>
     <form id="welcomeForm" novalidate>
       <h2>Welcome to Plate</h2>
-      <p class="hint">Log what you eat, hit your targets and see your estimated deficit. Everything stays on your phone.</p>
-      <label class="f" for="wName">Your name
-        <input id="wName" type="text" maxlength="40" autocomplete="given-name" placeholder="e.g. Alex">
-      </label>
-      <label class="f" for="wKcal">Daily calorie target (kcal)
-        <input id="wKcal" type="number" inputmode="numeric" min="500" step="10" placeholder="e.g. 2000">
-      </label>
-      <div class="row3">
-        <label class="f" for="wP">Protein (g)<input id="wP" type="number" inputmode="numeric" min="0" placeholder="150"></label>
-        <label class="f" for="wF">Fat (g)<input id="wF" type="number" inputmode="numeric" min="0" placeholder="70"></label>
-        <label class="f" for="wC">Carbs (g)<input id="wC" type="number" inputmode="numeric" min="0" placeholder="200"></label>
-      </div>
-      <p class="hint">You can set your BMR, steps and gym numbers in Settings for the burn estimate.</p>
-      <button type="submit" class="primary">Get started</button>
-      <button type="button" class="linkbtn" id="wRestoreBtn">I have a backup to restore</button>
+      <p class="hint">Log what you eat, hit your targets and see your estimated deficit. Fill this in once and everything stays on your phone.</p>
+      <button type="button" class="linkbtn" id="wRestoreBtn" style="justify-self:start">Already use Plate? Restore a backup instead</button>
       <div id="wRestore" class="backup-body" hidden>
         <label class="f" for="wRestoreText">Paste your backup
           <textarea id="wRestoreText" rows="4" spellcheck="false" autocapitalize="off" autocomplete="off"></textarea>
         </label>
         <button type="button" class="ghost" id="wRestoreGo">Restore backup</button>
       </div>
+
+      <label class="f" for="wName">Your name
+        <input id="wName" type="text" maxlength="40" autocomplete="given-name" placeholder="e.g. Alex">
+      </label>
+
+      <h3 class="wh">About you</h3>
+      <div class="seg two" role="radiogroup" aria-label="Sex">
+        <label><input type="radio" name="wsex" value="m"><span>Male</span></label>
+        <label><input type="radio" name="wsex" value="f"><span>Female</span></label>
+      </div>
+      <div class="row3">
+        <label class="f" for="wAge">Age<input id="wAge" type="number" inputmode="numeric" min="13" max="100" placeholder="25"></label>
+        <label class="f" for="wHeight">Height (cm)<input id="wHeight" type="number" inputmode="decimal" min="100" max="250" placeholder="175"></label>
+        <label class="f" for="wWeight">Weight (kg)<input id="wWeight" type="number" inputmode="decimal" min="30" max="300" step="0.1" placeholder="75"></label>
+      </div>
+
+      <h3 class="wh">Activity</h3>
+      <div class="row2">
+        <label class="f" for="wSteps">Usual steps a day<input id="wSteps" type="number" inputmode="numeric" min="0" step="500" value="7000"></label>
+        <label class="f" for="wGym">Gym sessions a week<input id="wGym" type="number" inputmode="decimal" min="0" max="14" step="1" value="0"></label>
+      </div>
+      <div class="f">At work
+        <div class="seg" role="radiogroup" aria-label="At work">
+          <label><input type="radio" name="wwork" value="0" checked><span>Sitting</span></label>
+          <label><input type="radio" name="wwork" value="60"><span>Some standing</span></label>
+          <label><input type="radio" name="wwork" value="120"><span>On my feet</span></label>
+        </div>
+      </div>
+      <div class="estbox" id="wEst">Fill in the details above to see your estimate.</div>
+
+      <h3 class="wh">Daily targets</h3>
+      <div class="f">Calories (kcal)
+        <input id="wKcal" type="number" inputmode="numeric" min="500" step="10" aria-label="Daily calorie target">
+        <div class="chips" id="wGoal">
+          <button type="button" class="chip" data-d="0" aria-pressed="true">Maintain</button>
+          <button type="button" class="chip" data-d="-300" aria-pressed="false">Lose slowly (&minus;300)</button>
+          <button type="button" class="chip" data-d="-500" aria-pressed="false">Lose (&minus;500)</button>
+          <button type="button" class="chip" data-d="300" aria-pressed="false">Gain (+300)</button>
+        </div>
+      </div>
+      <div class="row3">
+        <label class="f" for="wP">Protein (g)<input id="wP" type="number" inputmode="numeric" min="0"></label>
+        <label class="f" for="wF">Fat (g)<input id="wF" type="number" inputmode="numeric" min="0"></label>
+        <label class="f" for="wC">Carbs (g)<input id="wC" type="number" inputmode="numeric" min="0"></label>
+      </div>
+      <p class="hint">Suggested from your details. Change any number to whatever you prefer. You can edit all of this later in Settings.</p>
+      <button type="submit" class="primary">Get started</button>
     </form>
   </section>
 
@@ -390,6 +429,14 @@ textarea{width:100%;min-width:0;padding:10px 12px;font:13px/1.4 var(--f-mono);co
         <label class="f" for="sF">Fat (g)<input id="sF" type="number" inputmode="numeric" min="0"></label>
         <label class="f" for="sC">Carbs (g)<input id="sC" type="number" inputmode="numeric" min="0"></label>
       </div>
+      <h3>About you</h3>
+      <div class="row2">
+        <label class="f" for="sSex">Sex<select id="sSex"><option value="">Not set</option><option value="m">Male</option><option value="f">Female</option></select></label>
+        <label class="f" for="sAge">Age<input id="sAge" type="number" inputmode="numeric" min="0"></label>
+        <label class="f" for="sHeight">Height (cm)<input id="sHeight" type="number" inputmode="decimal" min="0"></label>
+        <label class="f" for="sWeight">Weight (kg)<input id="sWeight" type="number" inputmode="decimal" min="0" step="0.1"></label>
+      </div>
+      <button type="button" class="ghost" id="sCalc">Recalculate BMR from these</button>
       <h3>Burn estimate</h3>
       <p class="hint">Burn = BMR &times; multiplier + standing extra + extra steps &times; kcal per step + gym.</p>
       <div class="row2">
@@ -441,7 +488,7 @@ let toastT=0;
 function toast(m){const t=$('toast');t.textContent=m;t.hidden=false;clearTimeout(toastT);toastT=setTimeout(()=>{t.hidden=true;},2800);}
 
 /* ---------- state ---------- */
-const DEFAULTS={name:'',kcal:2000,p:150,f:70,c:200,bmr:1800,mult:1.2,stand:0,base:3000,per:0.04,usual:6000,gym:300,gymWk:0,perKg:7700,setup:false};
+const DEFAULTS={name:'',sex:'',age:0,height:0,weight:0,kcal:2000,p:150,f:70,c:200,bmr:1800,mult:1.2,stand:0,base:3000,per:0.04,usual:6000,gym:300,gymWk:0,perKg:7700,setup:false};
 let S={settings:Object.assign({},DEFAULTS),foods:[],days:{}};
 const todayStr=ymd(new Date());
 let cur=todayStr,editingId=null,delArmed=false,delT=0,view='day',storageOk=true;
@@ -461,6 +508,7 @@ function cleanState(d){
   if(d.settings&&typeof d.settings==='object') for(const k in DEFAULTS){
     const v=d.settings[k];
     if(typeof DEFAULTS[k]==='number'){const n=num(v);if(n!=null&&n>=0) st[k]=n;}
+    else if(k==='sex'){st.sex=v==='m'||v==='f'?v:'';}
     else if(typeof DEFAULTS[k]==='boolean') st[k]=!!v;
     else if(typeof v==='string') st[k]=v.slice(0,40);
   }
@@ -820,7 +868,7 @@ $('pkOpen').addEventListener('click',()=>{
 let rsT=0;window.addEventListener('resize',()=>{cancelAnimationFrame(rsT);rsT=requestAnimationFrame(()=>{if(view==='stats') renderStats();});});
 
 /* ---------- settings ---------- */
-const SET_FIELDS=[['sName','name'],['sKcal','kcal'],['sP','p'],['sF','f'],['sC','c'],['sBmr','bmr'],['sMult','mult'],['sStand','stand'],['sBase','base'],['sPer','per'],['sUsual','usual'],['sGym','gym'],['sGymWk','gymWk'],['sPerKg','perKg']];
+const SET_FIELDS=[['sName','name'],['sSex','sex'],['sAge','age'],['sHeight','height'],['sWeight','weight'],['sKcal','kcal'],['sP','p'],['sF','f'],['sC','c'],['sBmr','bmr'],['sMult','mult'],['sStand','stand'],['sBase','base'],['sPer','per'],['sUsual','usual'],['sGym','gym'],['sGymWk','gymWk'],['sPerKg','perKg']];
 let setReturn=null;
 function openSettings(){
   for(const [id,k] of SET_FIELDS) $(id).value=S.settings[k];
@@ -836,6 +884,7 @@ $('setForm').addEventListener('submit',e=>{
   const next=Object.assign({},S.settings);
   for(const [id,k] of SET_FIELDS){
     if(k==='name'){next.name=$(id).value.trim().slice(0,40);continue;}
+    if(k==='sex'){next.sex=$(id).value;continue;}
     const n=num($(id).value);
     if(n==null||n<0){toast('Check '+$(id).closest('label').firstChild.textContent.trim()+'.');$(id).focus();return;}
     next[k]=n;
@@ -847,20 +896,69 @@ $('setForm').addEventListener('submit',e=>{
 });
 
 /* ---------- welcome ---------- */
+function bmrOf(sex,age,h,w){return 10*w+6.25*h-5*age+(sex==='m'?5:-161);}
+const perStep=w=>Math.round(w*0.0005*1000)/1000;
+let wGoalD=0;const wTouched={};
+function wRead(){
+  const sexEl=document.querySelector('input[name=wsex]:checked');
+  return {sex:sexEl?sexEl.value:'',age:num($('wAge').value),h:num($('wHeight').value),w:num($('wWeight').value),
+    steps:num($('wSteps').value)||0,gym:num($('wGym').value)||0,stand:Number(document.querySelector('input[name=wwork]:checked').value)};
+}
+function wEstimate(){
+  const r=wRead();
+  if(!r.sex||!(r.age>0)||!(r.h>0)||!(r.w>0)) return null;
+  const bmr=bmrOf(r.sex,r.age,r.h,r.w),per=perStep(r.w);
+  const burn=bmr*1.2+r.stand+Math.max(0,r.steps-3000)*per+300*r.gym/7;
+  return Object.assign(r,{bmr,per,burn});
+}
+function wUpdate(){
+  const e=wEstimate(),box=$('wEst');
+  if(!e){box.textContent='Fill in the details above to see your estimate.';return;}
+  box.replaceChildren(el('div',{},'BMR ≈ ',el('b',{text:kc(e.bmr)+' kcal'})),el('div',{},'Everyday burn ≈ ',el('b',{text:kc(e.burn)+' kcal'})),el('div',{text:'That’s roughly what keeps your weight the same.'}));
+  const target=Math.round((e.burn+wGoalD)/10)*10;
+  if(!wTouched.wKcal) $('wKcal').value=target;
+  const t=num($('wKcal').value)||target,pp=Math.round(1.6*e.w),ff=Math.round(t*0.25/9);
+  if(!wTouched.wP) $('wP').value=pp;
+  if(!wTouched.wF) $('wF').value=ff;
+  if(!wTouched.wC) $('wC').value=Math.max(0,Math.round((t-(num($('wP').value)||pp)*4-(num($('wF').value)||ff)*9)/4));
+}
+$('welcomeForm').addEventListener('input',e=>{
+  if(['wKcal','wP','wF','wC'].includes(e.target.id)){wTouched[e.target.id]=true;if(e.target.id==='wKcal') for(const c of $('wGoal').children) c.setAttribute('aria-pressed','false');}
+  wUpdate();
+});
+$('welcomeForm').addEventListener('change',wUpdate);
+$('wGoal').addEventListener('click',e=>{
+  const b=e.target.closest('[data-d]');if(!b) return;
+  wGoalD=Number(b.dataset.d);delete wTouched.wKcal;
+  for(const c of $('wGoal').children) c.setAttribute('aria-pressed',String(c===b));
+  wUpdate();
+});
 function showWelcome(){document.body.classList.add('onboarding');$('welcome').hidden=false;}
-function finishWelcome(){document.body.classList.remove('onboarding');$('welcome').hidden=true;renderDay();}
+function finishWelcome(){document.body.classList.remove('onboarding');$('welcome').hidden=true;renderDay();window.scrollTo({top:0});}
 $('welcomeForm').addEventListener('submit',e=>{
   e.preventDefault();
+  const est=wEstimate();
+  if(!est){toast('Add your sex, age, height and weight so the estimate works.');(document.querySelector('input[name=wsex]:checked')?$('wAge'):document.querySelector('input[name=wsex]')).focus();return;}
   const k=num($('wKcal').value);
-  if(k==null||k<500){toast('Enter your daily calorie target, like 2000.');$('wKcal').focus();return;}
-  const s=Object.assign({},S.settings,{name:$('wName').value.trim().slice(0,40),kcal:k,setup:true});
+  if(k==null||k<500){toast('Enter a daily calorie target of at least 500.');$('wKcal').focus();return;}
+  const s=Object.assign({},S.settings,{name:$('wName').value.trim().slice(0,40),sex:est.sex,age:est.age,height:est.h,weight:est.w,
+    bmr:Math.round(est.bmr),mult:1.2,stand:est.stand,base:3000,per:est.per,usual:est.steps,gym:300,gymWk:est.gym,kcal:k,setup:true});
   for(const [id,key] of [['wP','p'],['wF','f'],['wC','c']]){const n=num($(id).value);if(n!=null&&n>=0) s[key]=n;}
-  S.settings=s;if(!save()) return;finishWelcome();
+  const prevS=S.settings,prevD=S.days[todayStr];
+  S.settings=s;S.days[todayStr]=Object.assign({},S.days[todayStr]||{},{weight:est.w});
+  if(!save()){S.settings=prevS;if(prevD) S.days[todayStr]=prevD; else delete S.days[todayStr];return;}
+  finishWelcome();toast('All set'+(s.name?', '+s.name:'')+'!');
 });
 $('wRestoreBtn').addEventListener('click',()=>{$('wRestore').hidden=!$('wRestore').hidden;});
 $('wRestoreGo').addEventListener('click',()=>{
   const d=readBackup($('wRestoreText').value);if(!d) return;
   d.settings.setup=true;S=d;if(!save()) return;finishWelcome();toast('Restored '+d.foods.length+' foods');
+});
+$('sCalc').addEventListener('click',()=>{
+  const sex=$('sSex').value,age=num($('sAge').value),h=num($('sHeight').value),w=num($('sWeight').value);
+  if(!sex||!(age>0)||!(h>0)||!(w>0)){toast('Fill in sex, age, height and weight first.');return;}
+  $('sBmr').value=Math.round(bmrOf(sex,age,h,w));$('sPer').value=perStep(w);
+  toast('BMR updated. Tap Save settings to keep it.');
 });
 
 /* ---------- backup ---------- */
