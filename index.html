@@ -608,7 +608,7 @@ textarea{width:100%;min-width:0;padding:10px 12px;font:13px/1.4 var(--f-mono);co
       <label class="f" for="sPerKg">kcal per kg body fat<input id="sPerKg" type="number" inputmode="numeric" min="1000"></label>
       <h3>Food entry</h3>
       <label class="check" for="sAi"><input id="sAi" type="checkbox"><span>Use AI for foods that aren’t in your list</span></label>
-      <p class="hint">When on, what you type in Add food is sent to an AI service (Google Gemini) to estimate the numbers. Foods already in your list never leave your phone.</p>
+      <p class="hint">When on, what you type in Add food is sent to an AI service (Anthropic’s Claude) to estimate the numbers. Foods already in your list never leave your phone.</p>
       <button type="button" class="ghost" id="sMine">My foods</button>
       <button type="submit" class="primary">Save settings</button>
     </form>
@@ -655,7 +655,7 @@ let toastT=0;
 function toast(m){const t=$('toast');t.textContent=m;t.hidden=false;clearTimeout(toastT);toastT=setTimeout(()=>{t.hidden=true;},2800);}
 
 /* ---------- state ---------- */
-const DEFAULTS={name:'',sex:'',age:0,height:0,weight:0,kcal:2000,p:150,f:70,c:200,bmr:1800,mult:1.2,stand:0,base:3000,per:0.04,usual:6000,gym:300,gymWk:0,perKg:7700,setup:false,aiOff:false,aiOk:false};
+const DEFAULTS={name:'',sex:'',age:0,height:0,weight:0,kcal:2000,p:150,f:70,c:200,bmr:1800,mult:1.2,stand:0,base:3000,per:0.04,usual:6000,gym:300,gymWk:0,perKg:7700,setup:false,aiOff:false,aiOk:false,aiOk2:false};
 let S={settings:Object.assign({},DEFAULTS),foods:[],days:{},mine:[]};
 const todayStr=ymd(new Date());
 let cur=todayStr,editingId=null,delArmed=false,delT=0,view='day',storageOk=true;
@@ -1029,12 +1029,12 @@ function deviceId(){
   try{let d=localStorage.getItem('plate-device');if(!d){d='d-'+Math.random().toString(36).slice(2,12)+Date.now().toString(36);localStorage.setItem('plate-device',d);}return d;}
   catch(e){return 'd-nostorage-'+todayStr.replace(/-/g,'');}
 }
-class AiErr extends Error{constructor(kind){super(kind);this.kind=kind;}}
+class AiErr extends Error{constructor(kind,detail){super(kind);this.kind=kind;this.detail=detail||'';}}
 async function callAi(body){
   const url=aiUrl();
   if(!url) throw new AiErr('not_set_up');
   if(navigator.onLine===false) throw new AiErr('offline');
-  const ctl=new AbortController(),t=setTimeout(()=>ctl.abort(),30000);
+  const ctl=new AbortController(),t=setTimeout(()=>ctl.abort(),35000);
   let res;
   try{res=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(Object.assign({device:deviceId()},body)),signal:ctl.signal});}
   catch(e){throw new AiErr(e&&e.name==='AbortError'?'slow':'offline');}
@@ -1042,7 +1042,8 @@ async function callAi(body){
   let data=null;try{data=await res.json();}catch(e){}
   if(res.status===429) throw new AiErr('limit');
   if(res.status===503) throw new AiErr('busy');
-  if(!res.ok||!data||!Array.isArray(data.items)) throw new AiErr(data&&data.error==='not_set_up'?'not_set_up':'failed');
+  if(res.status===504) throw new AiErr('slow',data&&data.detail?String(data.detail).slice(0,200):'');
+  if(!res.ok||!data||!Array.isArray(data.items)) throw new AiErr(data&&data.error==='not_set_up'?'not_set_up':'failed',data&&data.detail?String(data.detail).slice(0,200):'HTTP '+res.status);
   return data;
 }
 const AI_MSG={
@@ -1099,12 +1100,12 @@ function setBusy(b,which){
 }
 function askConsent(then){
   const ok=el('button',{type:'button',class:'primary',onclick:()=>{
-    S.settings.aiOk=true;save();closeInfo();then();}},'OK, use AI');
+    S.settings.aiOk2=true;save();closeInfo();then();}},'OK, use AI');
   openInfo('Before you use AI',[el('div',{class:'consent'},
-    el('p',{text:'To estimate foods that aren’t in your list, Plate sends what you type to an AI service (Google Gemini).'}),
+    el('p',{text:'To estimate foods that aren’t in your list, Plate sends what you type to an AI service (Anthropic’s Claude).'}),
     el('ul',{},
       el('li',{text:'Only the food text is sent, plus matching foods from your list. Never your name, weight or log.'}),
-      el('li',{text:'Google’s free AI tier may use what’s sent to improve its products, so don’t type anything private.'}),
+      el('li',{text:'Anthropic doesn’t use it to train its AI. Still, don’t type anything private.'}),
       el('li',{text:'All numbers are estimates, not medical advice. Check them before you add.'})),
     el('p',{class:'hint',text:'You can turn AI off any time in Settings.'})),ok,
     el('button',{type:'button',class:'ghost',onclick:closeInfo},'Not now')]);
@@ -1118,7 +1119,7 @@ async function workItOut(){
   draftText=text;openKey=null;
   if(!unknown.length){draft=local;renderDraft('');return;}
   if(!aiOn()){draft=local;renderDraft('Not in your list: '+unknown.join(', ')+'. Turn on AI in Settings, or enter it by hand.');return;}
-  if(!S.settings.aiOk){askConsent(workItOut);return;}
+  if(!S.settings.aiOk2){askConsent(workItOut);return;}
   setBusy(true,'go');
   try{
     const data=await callAi({mode:'parse',text,known:local.map(knownOut),saved:savedHints(unknown)});
@@ -1135,7 +1136,7 @@ async function workItOut(){
     draft=out;renderDraft(data.note||'');
   }catch(e){
     draft=local;
-    renderDraft((AI_MSG[e.kind]||AI_MSG.failed)+(unknown.length?' Not found: '+unknown.join(', ')+'.':''));
+    renderDraft((AI_MSG[e.kind]||AI_MSG.failed)+(unknown.length?' Not found: '+unknown.join(', ')+'.':'')+(e.detail?' ('+e.detail+')':''));
   }finally{setBusy(false);}
 }
 async function fixInWords(){
@@ -1143,7 +1144,7 @@ async function fixInWords(){
   if(!ins){$('fixText').focus();return;}
   if(aiBusy) return;
   if(!aiOn()){toast('Turn on AI in Settings to fix in words, or tap an item to edit it.');return;}
-  if(!S.settings.aiOk){askConsent(fixInWords);return;}
+  if(!S.settings.aiOk2){askConsent(fixInWords);return;}
   setBusy(true,'fix');
   try{
     const data=await callAi({mode:'fix',text:ins,original:draftText,items:draft.map(itemOut),saved:savedHints([ins])});
@@ -1158,7 +1159,7 @@ async function fixInWords(){
     }
     if(!out.length){toast('That would remove everything. Tap Cancel to start over.');return;}
     draft=out;$('fixText').value='';openKey=null;renderDraft(data.note||'');
-  }catch(e){toast(AI_MSG[e.kind]||AI_MSG.failed);}
+  }catch(e){toast((AI_MSG[e.kind]||AI_MSG.failed)+(e.detail?' ('+e.detail+')':''));}
   finally{setBusy(false);}
 }
 const SRC_TXT={mine:'Your list','built-in':'Built-in',ai:'AI est',you:'Your number',edited:'Edited'};

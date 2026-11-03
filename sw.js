@@ -1,5 +1,5 @@
 // Bump CACHE when index.html changes so phones pick up the new version.
-const CACHE = 'plate-v5';
+const CACHE = 'plate-v8';
 const CORE = ['./', 'index.html', 'foods.json', 'manifest.webmanifest', 'icon-180.png', 'icon-192.png', 'icon-512.png'];
 
 self.addEventListener('install', (e) => {

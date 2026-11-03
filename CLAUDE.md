@@ -15,7 +15,7 @@ Plate is a calorie and macro tracker web app (installable PWA), heading for the 
 - Burn = BMR x 1.2 + standing extra + max(0, steps - 3000) x kcal per step + gym. On target = within +/-10%. Fat change = deficit / 7700.
 
 ## AI rules
-- Use the Gemini API free tier for now, with the provider switchable to the Claude API later.
+- Use the Claude API (Claude Haiku 5.5, structured outputs, low effort). Gemini was tried first and dropped (free-tier models refused for new keys, slow). The worker still has a Gemini option behind `PROVIDER=gemini`. Costs about $0.0004 per AI entry.
 - Never put any API key in the website or the repo. Keys live only in a Cloudflare Worker as a secret. Omer adds keys himself and never pastes them in chat.
 - The app must tell users that food descriptions go to an AI service, and that all numbers are estimates, not medical advice.
 - Never commit anyone's personal food logs or backups to this public repo.

@@ -4,10 +4,10 @@
 // The API key lives here as a Cloudflare secret. It is never sent to the app.
 //
 // Settings (Cloudflare dashboard > Worker > Settings > Variables and Secrets):
-//   GEMINI_API_KEY   secret, required while PROVIDER is gemini
-//   CLAUDE_API_KEY   secret, only needed if PROVIDER is claude
-//   PROVIDER         "gemini" (default) or "claude"
-//   GEMINI_MODEL     default "gemini-2.5-flash"
+//   CLAUDE_API_KEY   secret, required while PROVIDER is claude (the default)
+//   GEMINI_API_KEY   secret, only needed if PROVIDER is gemini
+//   PROVIDER         "claude" (default) or "gemini"
+//   GEMINI_MODEL     default "gemini-flash-latest" (Google's current Flash model)
 //   CLAUDE_MODEL     default "claude-haiku-5-5"
 //   ALLOWED_ORIGINS  comma list, default "https://omerfauzan.github.io"
 //   DEVICE_LIMIT     AI requests per device per day, default 30
@@ -15,6 +15,8 @@
 //   DAILY_LIMIT      AI requests for the whole app per day, default 300
 // Binding: a KV namespace bound as LIMITS (holds the daily counters).
 
+// Bump when this file changes, so you can see which version is live at the worker URL.
+const VERSION = 6;
 const MAX_TEXT = 600;
 const MAX_ITEMS = 25;
 
@@ -153,7 +155,7 @@ Set changed=false on every item.`;
 }
 
 // ---------- providers ----------
-// Both return the parsed JSON object. To switch, set PROVIDER and add that key.
+// Both return the parsed JSON object. Claude is the default; set PROVIDER to gemini to switch back.
 
 function toGeminiSchema(s) {
   const out = { type: s.type.toUpperCase() };
@@ -168,54 +170,188 @@ function toGeminiSchema(s) {
   return out;
 }
 
+// Error that carries a short, safe reason we can show (never the key).
+class AiError extends Error {
+  constructor(code, detail) { super(code); this.detail = detail || ''; }
+}
+function googleMessage(raw) {
+  try { const d = JSON.parse(raw); return String((d.error && (d.error.status + ': ' + d.error.message)) || '').slice(0, 200); } catch (e) { return String(raw || '').slice(0, 120); }
+}
+const GEMINI = 'https://generativelanguage.googleapis.com/v1beta/models/';
+const geminiModels = (env) => [...new Set([env.GEMINI_MODEL || 'gemini-flash-latest', 'gemini-2.5-flash'])];
+
 async function askGemini(prompt, env) {
-  if (!env.GEMINI_API_KEY) throw new Error('missing_key');
-  const model = env.GEMINI_MODEL || 'gemini-2.5-flash';
-  const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'x-goog-api-key': env.GEMINI_API_KEY },
-    body: JSON.stringify({
-      systemInstruction: { parts: [{ text: RULES }] },
-      contents: [{ role: 'user', parts: [{ text: prompt }] }],
-      generationConfig: {
-        temperature: 0.2,
-        responseMimeType: 'application/json',
-        responseSchema: toGeminiSchema(RESULT_SCHEMA),
-      },
-    }),
-  });
-  if (res.status === 429) throw new Error('provider_busy');
-  if (!res.ok) throw new Error('provider_error_' + res.status);
-  const data = await res.json();
-  const parts = (data.candidates && data.candidates[0] && data.candidates[0].content && data.candidates[0].content.parts) || [];
-  const text = parts.map((p) => p.text || '').join('');
-  return JSON.parse(text);
+  if (!env.GEMINI_API_KEY) throw new AiError('missing_key');
+  let last;
+  // If the model name has been retired (404), try Google's "latest flash" alias.
+  for (const model of geminiModels(env)) {
+    try { return await askGeminiModel(model, prompt, env); } catch (e) {
+      last = e;
+      if (!(e.detail && /^gemini (404|403)/.test(e.detail))) throw e;
+    }
+  }
+  throw last;
+}
+
+// Newer Gemini models "think" before answering by default, which can take 30+ seconds.
+// Food estimates don't need much of it. 2.5 models take a budget (0 = off),
+// Gemini 3 and the "latest" aliases take a level. Older models have no thinking.
+function thinkingFor(model) {
+  if (/^gemini-(1\.|2\.0)/.test(model)) return null;
+  if (/^gemini-2\.5/.test(model)) return { thinkingBudget: /pro/.test(model) ? 128 : 0 };
+  return { thinkingLevel: 'low' };
+}
+const TIMEOUT_MS = 25000;
+
+async function askGeminiModel(model, prompt, env, noThinking) {
+  const thinking = noThinking ? null : thinkingFor(model);
+  const ctl = new AbortController();
+  const timer = setTimeout(() => ctl.abort(), TIMEOUT_MS);
+  const started = Date.now();
+  console.log('asking gemini', model);
+  let res, raw;
+  try {
+    res = await fetch(`${GEMINI}${encodeURIComponent(model)}:generateContent`, {
+      signal: ctl.signal,
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-goog-api-key': env.GEMINI_API_KEY },
+      body: JSON.stringify({
+        systemInstruction: { parts: [{ text: RULES }] },
+        contents: [{ role: 'user', parts: [{ text: prompt }] }],
+        generationConfig: {
+          temperature: 0.2,
+          responseMimeType: 'application/json',
+          responseSchema: toGeminiSchema(RESULT_SCHEMA),
+          ...(thinking ? { thinkingConfig: thinking } : {}),
+        },
+      }),
+    });
+    raw = await res.text(); // inside the timeout too, in case the body is slow
+  } catch (e) {
+    console.log('gemini fetch failed', model, Date.now() - started + 'ms', String((e && e.message) || e));
+    if (ctl.signal.aborted) throw new AiError('provider_slow', `gemini ${model} took over ${TIMEOUT_MS / 1000}s`);
+    throw new AiError('provider_error', `gemini ${model} fetch failed`);
+  } finally {
+    clearTimeout(timer);
+  }
+  console.log('gemini', model, res.status, Date.now() - started + 'ms');
+  if (res.status === 429) throw new AiError('provider_busy', 'gemini 429 ' + googleMessage(raw));
+  if (res.status === 400 && thinking && /thinking/i.test(raw)) {
+    console.log('gemini', model, 'rejected the thinking setting, trying without');
+    return askGeminiModel(model, prompt, env, true);
+  }
+  if (!res.ok) {
+    console.log('gemini problem', model, googleMessage(raw));
+    throw new AiError('provider_error', `gemini ${res.status} ${model} ${googleMessage(raw)}`);
+  }
+  let data;
+  try { data = JSON.parse(raw); } catch (e) { throw new AiError('bad_reply', `gemini ${model} reply wasn't JSON`); }
+  const cand = data.candidates && data.candidates[0];
+  const parts = (cand && cand.content && cand.content.parts) || [];
+  const text = parts.filter((p) => !p.thought).map((p) => p.text || '').join('');
+  try { return JSON.parse(text); } catch (e) {
+    throw new AiError('bad_reply', `gemini ${model} gave no JSON (${(cand && cand.finishReason) || 'no answer'})`);
+  }
+}
+
+// Open https://<worker>/check in a browser to see if the key and model work.
+// Lists the model only (no AI request), so it doesn't use your daily quota.
+async function check(env) {
+  const out = { ok: false, version: VERSION, provider: (env.PROVIDER || 'claude').toLowerCase(), limits_bound: !!env.LIMITS };
+  if (out.provider === 'claude') {
+    out.key_set = !!env.CLAUDE_API_KEY;
+    if (!out.key_set) { out.problem = 'CLAUDE_API_KEY secret is missing'; return out; }
+    const model = claudeModel(env);
+    const res = await fetch(CLAUDE_URL + 'models/' + encodeURIComponent(model), { headers: claudeHeaders(env) });
+    out.model = model;
+    out.status = res.status;
+    if (res.ok) out.ok = true; else out.problem = claudeMessage(await res.text());
+    return out;
+  }
+  out.key_set = !!env.GEMINI_API_KEY;
+  if (!out.key_set) { out.problem = 'GEMINI_API_KEY secret is missing'; return out; }
+  out.models = [];
+  for (const model of geminiModels(env)) {
+    const res = await fetch(GEMINI + encodeURIComponent(model), { headers: { 'x-goog-api-key': env.GEMINI_API_KEY } });
+    const r = { model, status: res.status };
+    if (!res.ok) r.problem = googleMessage(await res.text());
+    out.models.push(r);
+    if (res.ok) { out.ok = true; break; }
+  }
+  // Which Flash models this key can use, so we can pick one if the default stops working.
+  try {
+    const res = await fetch(GEMINI.replace(/models\/$/, 'models') + '?pageSize=200', { headers: { 'x-goog-api-key': env.GEMINI_API_KEY } });
+    const d = await res.json();
+    out.flash_models = (d.models || [])
+      .filter((m) => /flash/.test(m.name) && (m.supportedGenerationMethods || []).includes('generateContent') && !/(image|tts|audio|live|embedding)/.test(m.name))
+      .map((m) => m.name.replace('models/', ''));
+  } catch (e) { /* not important */ }
+  out.note = 'A model can be listed here and still be refused for new keys. The app request log shows the real answer.';
+  return out;
+}
+
+// Claude needs additionalProperties:false on every object for structured outputs.
+function strictSchema(x) {
+  const o = { ...x };
+  if (o.properties) {
+    o.properties = Object.fromEntries(Object.entries(o.properties).map(([k, v]) => [k, strictSchema(v)]));
+    o.additionalProperties = false;
+  }
+  if (o.items) o.items = strictSchema(o.items);
+  return o;
+}
+const CLAUDE_URL = 'https://api.anthropic.com/v1/';
+const claudeHeaders = (env) => ({ 'Content-Type': 'application/json', 'x-api-key': env.CLAUDE_API_KEY, 'anthropic-version': '2026-10-21' });
+const claudeModel = (env) => env.CLAUDE_MODEL || 'claude-haiku-5-5';
+function claudeMessage(raw) {
+  try { const d = JSON.parse(raw); return String((d.error && (d.error.type + ': ' + d.error.message)) || '').slice(0, 200); } catch (e) { return String(raw || '').slice(0, 120); }
 }
 
 async function askClaude(prompt, env) {
-  if (!env.CLAUDE_API_KEY) throw new Error('missing_key');
-  const res = await fetch('https://api.anthropic.com/v1/messages', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'x-api-key': env.CLAUDE_API_KEY,
-      'anthropic-version': '2023-06-01',
-    },
-    body: JSON.stringify({
-      model: env.CLAUDE_MODEL || 'claude-haiku-5-5',
-      max_tokens: 2000,
-      system: RULES,
-      tools: [{ name: 'food_items', description: 'Return the food items', input_schema: RESULT_SCHEMA }],
-      tool_choice: { type: 'tool', name: 'food_items' },
-      messages: [{ role: 'user', content: prompt }],
-    }),
-  });
-  if (res.status === 429 || res.status === 529) throw new Error('provider_busy');
-  if (!res.ok) throw new Error('provider_error_' + res.status);
-  const data = await res.json();
-  const block = (data.content || []).find((b) => b.type === 'tool_use');
-  if (!block) throw new Error('bad_reply');
-  return block.input;
+  if (!env.CLAUDE_API_KEY) throw new AiError('missing_key');
+  const model = claudeModel(env);
+  const ctl = new AbortController();
+  const timer = setTimeout(() => ctl.abort(), TIMEOUT_MS);
+  const started = Date.now();
+  console.log('asking claude', model);
+  let res, raw;
+  try {
+    res = await fetch(CLAUDE_URL + 'messages', {
+      signal: ctl.signal,
+      method: 'POST',
+      headers: claudeHeaders(env),
+      body: JSON.stringify({
+        model,
+        max_tokens: 4000,
+        system: RULES,
+        messages: [{ role: 'user', content: prompt }],
+        // Structured outputs: the reply is guaranteed to be JSON matching the schema.
+        // Low effort keeps it quick; food estimates don't need deep thinking.
+        output_config: { effort: 'low', format: { type: 'json_schema', schema: strictSchema(RESULT_SCHEMA) } },
+      }),
+    });
+    raw = await res.text();
+  } catch (e) {
+    console.log('claude fetch failed', model, Date.now() - started + 'ms', String((e && e.message) || e));
+    if (ctl.signal.aborted) throw new AiError('provider_slow', `claude ${model} took over ${TIMEOUT_MS / 1000}s`);
+    throw new AiError('provider_error', `claude ${model} fetch failed`);
+  } finally {
+    clearTimeout(timer);
+  }
+  console.log('claude', model, res.status, Date.now() - started + 'ms');
+  if (res.status === 429 || res.status === 529) throw new AiError('provider_busy', `claude ${res.status} ${claudeMessage(raw)}`);
+  if (!res.ok) {
+    console.log('claude problem', model, claudeMessage(raw));
+    throw new AiError('provider_error', `claude ${res.status} ${model} ${claudeMessage(raw)}`);
+  }
+  let data;
+  try { data = JSON.parse(raw); } catch (e) { throw new AiError('bad_reply', `claude ${model} reply wasn't JSON`); }
+  if (data.stop_reason === 'refusal') throw new AiError('bad_reply', `claude ${model} declined this one`);
+  if (data.stop_reason === 'max_tokens') throw new AiError('bad_reply', `claude ${model} ran out of room, try fewer foods at once`);
+  const text = (data.content || []).filter((b) => b.type === 'text').map((b) => b.text).join('');
+  try { return JSON.parse(text); } catch (e) {
+    throw new AiError('bad_reply', `claude ${model} gave no JSON (${data.stop_reason || 'no answer'})`);
+  }
 }
 
 // ---------- daily limits ----------
@@ -253,7 +389,12 @@ export default {
     const origin = request.headers.get('Origin');
     const c = cors(origin, env);
     if (request.method === 'OPTIONS') return new Response(null, { status: c.ok ? 204 : 403, headers: c.headers });
-    if (request.method === 'GET') return reply({ ok: true, app: 'plate-ai' }, 200, c.headers);
+    if (request.method === 'GET') {
+      if (new URL(request.url).pathname === '/check') {
+        try { return reply(await check(env), 200, c.headers); } catch (e) { return reply({ ok: false, problem: String(e.message || e) }, 200, c.headers); }
+      }
+      return reply({ ok: true, app: 'plate-ai', version: VERSION }, 200, c.headers);
+    }
     if (request.method !== 'POST') return reply({ error: 'method' }, 405, c.headers);
     if (!c.ok) return reply({ error: 'origin' }, 403, c.headers);
 
@@ -271,19 +412,23 @@ export default {
     if (!/^[a-z0-9-]{8,64}$/i.test(device)) return reply({ error: 'bad_device' }, 400, c.headers);
 
     const ip = request.headers.get('CF-Connecting-IP') || 'unknown';
+    console.log('plate-ai v' + VERSION, body.mode || 'parse');
     const lim = await checkLimits(env, device, ip);
     if (!lim.ok) return reply({ error: 'limit', why: lim.why }, 429, c.headers);
 
-    const provider = (env.PROVIDER || 'gemini').toLowerCase();
+    const provider = (env.PROVIDER || 'claude').toLowerCase();
     let out;
     try {
       const prompt = buildPrompt(body);
       out = provider === 'claude' ? await askClaude(prompt, env) : await askGemini(prompt, env);
     } catch (e) {
       const msg = String((e && e.message) || e);
-      if (msg === 'provider_busy') return reply({ error: 'busy' }, 503, c.headers);
+      const detail = str(e && e.detail, 240);
+      console.log('ai error', msg, detail);
+      if (msg === 'provider_busy') return reply({ error: 'busy', detail }, 503, c.headers);
+      if (msg === 'provider_slow') return reply({ error: 'slow', detail }, 504, c.headers);
       if (msg === 'missing_key') return reply({ error: 'not_set_up' }, 500, c.headers);
-      return reply({ error: 'ai_failed' }, 502, c.headers);
+      return reply({ error: 'ai_failed', detail: detail || msg.slice(0, 120) }, 502, c.headers);
     }
     const items = (out && Array.isArray(out.items) ? out.items : []).slice(0, MAX_ITEMS).map(cleanItem).filter(Boolean);
     return reply({ items, note: str(out && out.note, 200), left: lim.left, provider }, 200, c.headers);
