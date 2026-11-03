@@ -7,7 +7,7 @@
 //   GEMINI_API_KEY   secret, required while PROVIDER is gemini
 //   CLAUDE_API_KEY   secret, only needed if PROVIDER is claude
 //   PROVIDER         "gemini" (default) or "claude"
-//   GEMINI_MODEL     default "gemini-2.5-flash"
+//   GEMINI_MODEL     default "gemini-flash-latest" (Google's current Flash model)
 //   CLAUDE_MODEL     default "claude-haiku-5-5"
 //   ALLOWED_ORIGINS  comma list, default "https://omerfauzan.github.io"
 //   DEVICE_LIMIT     AI requests per device per day, default 30
@@ -16,7 +16,7 @@
 // Binding: a KV namespace bound as LIMITS (holds the daily counters).
 
 // Bump when this file changes, so you can see which version is live at the worker URL.
-const VERSION = 4;
+const VERSION = 5;
 const MAX_TEXT = 600;
 const MAX_ITEMS = 25;
 
@@ -178,7 +178,7 @@ function googleMessage(raw) {
   try { const d = JSON.parse(raw); return String((d.error && (d.error.status + ': ' + d.error.message)) || '').slice(0, 200); } catch (e) { return String(raw || '').slice(0, 120); }
 }
 const GEMINI = 'https://generativelanguage.googleapis.com/v1beta/models/';
-const geminiModels = (env) => [...new Set([env.GEMINI_MODEL || 'gemini-2.5-flash', 'gemini-flash-latest'])];
+const geminiModels = (env) => [...new Set([env.GEMINI_MODEL || 'gemini-flash-latest', 'gemini-2.5-flash'])];
 
 async function askGemini(prompt, env) {
   if (!env.GEMINI_API_KEY) throw new AiError('missing_key');
@@ -187,18 +187,24 @@ async function askGemini(prompt, env) {
   for (const model of geminiModels(env)) {
     try { return await askGeminiModel(model, prompt, env); } catch (e) {
       last = e;
-      if (!(e.detail && e.detail.startsWith('gemini 404'))) throw e;
+      if (!(e.detail && /^gemini (404|403)/.test(e.detail))) throw e;
     }
   }
   throw last;
 }
 
-// Gemini 2.5 models "think" before answering by default, which can take 30+ seconds.
-// Food estimates don't need it, so turn it off. Other models keep their default.
-const thinkingOff = (model) => (/^gemini-2\.5-flash/.test(model) ? { thinkingConfig: { thinkingBudget: 0 } } : {});
+// Newer Gemini models "think" before answering by default, which can take 30+ seconds.
+// Food estimates don't need much of it. 2.5 models take a budget (0 = off),
+// Gemini 3 and the "latest" aliases take a level. Older models have no thinking.
+function thinkingFor(model) {
+  if (/^gemini-(1\.|2\.0)/.test(model)) return null;
+  if (/^gemini-2\.5/.test(model)) return { thinkingBudget: /pro/.test(model) ? 128 : 0 };
+  return { thinkingLevel: 'low' };
+}
 const TIMEOUT_MS = 25000;
 
-async function askGeminiModel(model, prompt, env) {
+async function askGeminiModel(model, prompt, env, noThinking) {
+  const thinking = noThinking ? null : thinkingFor(model);
   const ctl = new AbortController();
   const timer = setTimeout(() => ctl.abort(), TIMEOUT_MS);
   const started = Date.now();
@@ -216,7 +222,7 @@ async function askGeminiModel(model, prompt, env) {
           temperature: 0.2,
           responseMimeType: 'application/json',
           responseSchema: toGeminiSchema(RESULT_SCHEMA),
-          ...thinkingOff(model),
+          ...(thinking ? { thinkingConfig: thinking } : {}),
         },
       }),
     });
@@ -230,7 +236,14 @@ async function askGeminiModel(model, prompt, env) {
   }
   console.log('gemini', model, res.status, Date.now() - started + 'ms');
   if (res.status === 429) throw new AiError('provider_busy', 'gemini 429 ' + googleMessage(raw));
-  if (!res.ok) throw new AiError('provider_error', `gemini ${res.status} ${model} ${googleMessage(raw)}`);
+  if (res.status === 400 && thinking && /thinking/i.test(raw)) {
+    console.log('gemini', model, 'rejected the thinking setting, trying without');
+    return askGeminiModel(model, prompt, env, true);
+  }
+  if (!res.ok) {
+    console.log('gemini problem', model, googleMessage(raw));
+    throw new AiError('provider_error', `gemini ${res.status} ${model} ${googleMessage(raw)}`);
+  }
   let data;
   try { data = JSON.parse(raw); } catch (e) { throw new AiError('bad_reply', `gemini ${model} reply wasn't JSON`); }
   const cand = data.candidates && data.candidates[0];
@@ -256,6 +269,15 @@ async function check(env) {
     out.models.push(r);
     if (res.ok) { out.ok = true; break; }
   }
+  // Which Flash models this key can use, so we can pick one if the default stops working.
+  try {
+    const res = await fetch(GEMINI.replace(/models\/$/, 'models') + '?pageSize=200', { headers: { 'x-goog-api-key': env.GEMINI_API_KEY } });
+    const d = await res.json();
+    out.flash_models = (d.models || [])
+      .filter((m) => /flash/.test(m.name) && (m.supportedGenerationMethods || []).includes('generateContent') && !/(image|tts|audio|live|embedding)/.test(m.name))
+      .map((m) => m.name.replace('models/', ''));
+  } catch (e) { /* not important */ }
+  out.note = 'A model can be listed here and still be refused for new keys. The app request log shows the real answer.';
   return out;
 }
 

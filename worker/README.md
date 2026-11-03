@@ -83,7 +83,7 @@ In **plate-ai** → **Settings** → **Variables and Secrets**, add any of these
 | `DEVICE_LIMIT` | `30` | AI requests per device per day |
 | `IP_LIMIT` | `60` | AI requests per IP address per day (stops someone faking device IDs) |
 | `DAILY_LIMIT` | `300` | AI requests for everyone combined per day |
-| `GEMINI_MODEL` | `gemini-2.5-flash` | Which Gemini model to use |
+| `GEMINI_MODEL` | `gemini-flash-latest` | Which Gemini model to use. The default always points at Google's current Flash model; if it fails the worker tries `gemini-2.5-flash` |
 | `ALLOWED_ORIGINS` | `https://omerfauzan.github.io` | Websites allowed to use the worker (comma separated). Localhost always works for testing. |
 | `PROVIDER` | `gemini` | Set to `claude` to switch to the Claude API |
 | `CLAUDE_MODEL` | `claude-haiku-5-5` | Which Claude model to use |
