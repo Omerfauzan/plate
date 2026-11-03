@@ -898,7 +898,7 @@ $('delBtn').addEventListener('click',()=>{
 
 /* ---------- food matching (my foods + built-in list) ---------- */
 // The worker URL isn't secret. localStorage override is only for testing.
-const AI_URL_DEFAULT='';
+const AI_URL_DEFAULT='https://plate-ai.omerfauzan407.workers.dev/';
 const aiUrl=()=>{try{return localStorage.getItem('plate-ai-url')||AI_URL_DEFAULT;}catch(e){return AI_URL_DEFAULT;}};
 let SEED=[];
 fetch('foods.json').then(r=>r.ok?r.json():null).then(d=>{if(d&&Array.isArray(d.foods)) SEED=d.foods.map(f=>Object.assign({src:'built-in'},f));}).catch(()=>{});
