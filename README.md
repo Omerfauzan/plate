@@ -6,7 +6,7 @@
 
 <p align="center">
   Log what you eat, hit your calorie and macro targets, and see your estimated deficit.<br>
-  A small web app that installs on your phone like a normal app. No account, no server.
+  A small web app that installs on your phone like a normal app. No account needed.
 </p>
 
 <p align="center">
@@ -38,7 +38,14 @@ A friend was tracking everything in a spreadsheet: every food, calories, protein
 - Weight, steps and gym for the day, which feed into the burn estimate.
 
 **Logging food**
-- Start typing and it suggests foods you've logged before, with their calories and macros filled in.
+- Tap **Add food** and type what you ate in plain words, like *"2 noshu bars, half chicken from El Jannah, 500 g mandi rice, 3 big lamb pieces"*.
+- Plate splits it into items, each with calories, protein, fat, carbs, a likely range ("650–850") and what it assumed ("~85 g each", "assumed oily").
+- Foods already in **My foods** or the built-in list use their saved numbers straight away, scaled to the amount you typed ("2 bars", "500 g", "half"). Only new foods go to the AI.
+- Check the list before adding: tap an item to change the amount (the numbers scale with it), the calories or macros, or to remove it.
+- Fix things in words, like *"change the bread to focaccia"*.
+- Everything you confirm is saved to **My foods**, so next time it's instant with no AI. Edit or delete them in Settings → My foods.
+- The built-in list has about 170 common Australian foods: takeaway (El Jannah, kebab shops, mandi, McDonald's, KFC, Hungry Jack's, Guzman y Gomez and more) and supermarket staples. Chain numbers are approximate.
+- Rather type the numbers yourself? **Enter numbers by hand instead** opens the old form, which still suggests past foods.
 - Quick-add buttons for the foods you eat most.
 - Macros are optional, so calories-only entries are fine.
 
@@ -96,11 +103,20 @@ All the burn and fat numbers are estimates, roughly ±10%. They're useful for sp
 
 ## Your data
 
-Everything is saved in your phone's browser storage and never leaves your phone. So:
+Your log is saved in your phone's browser storage. The only thing that ever leaves your phone is the food text you type in Add food when it needs the AI (see below). So:
 
 - If you clear Safari's website data or delete the app's data, your log goes with it.
 - Use **Backup and restore** at the bottom of the app now and then. **Copy backup** gives you a block of text to keep in Notes or send to yourself.
 - To move to a new phone, or to start from a backup, tap **Already use Plate? Restore a backup instead** on the welcome screen and paste it in.
+- The backup includes My foods.
+
+**About the AI**
+- When you type a food that isn't in your list, the text goes to Google's Gemini AI through a small Plate server (a Cloudflare Worker). Plate asks before the first time.
+- Only the food text is sent, plus matching foods from your list. Never your name, weight or log.
+- Google's free AI tier may use what's sent to improve its products, so don't type anything private.
+- There's a limit of 30 AI requests per phone per day. Foods in your list don't count.
+- Turn it off in Settings → Food entry. Then only foods in your list are found.
+- All numbers are estimates, not medical advice.
 
 ## How it's built
 
@@ -110,11 +126,15 @@ No frameworks and no build step, just plain HTML, CSS and JavaScript.
 |---|---|
 | `index.html` | The whole app: layout, styles and logic |
 | `sw.js` | Service worker that caches the app so it opens instantly and works offline |
+| `foods.json` | The built-in food list (edit it to add or fix foods) |
+| `worker/worker.js` | The Cloudflare Worker that holds the AI key, checks replies and limits use |
+| `worker/README.md` | Step-by-step setup for Cloudflare and the Gemini key |
 | `manifest.webmanifest` | Lets phones install it as an app (name, colours, icons) |
 | `icon-180.png`, `icon-192.png`, `icon-512.png` | App icons |
 | `docs/screenshots/` | Images for this README |
 
-- Data is stored in `localStorage` under keys starting with `plate-`.
+- Data is stored in `localStorage` under keys starting with `plate-`. My foods live in the same `plate-v1` data as the log, so backups include them.
+- The AI key is never in the app or this repo. It lives only in the Cloudflare Worker as a secret. The app only knows the Worker's URL.
 - Charts are plain SVG, with no chart library.
 - Light and dark mode follow the phone's setting by default. Tap the sun/moon button at the top, or pick Auto / Light / Dark in Settings, to choose one yourself.
 
@@ -132,7 +152,7 @@ Then open http://localhost:8000.
 
 ## Updating
 
-If you change `index.html`, bump the `CACHE` name in `sw.js` (for example `plate-v3` to `plate-v4`). Otherwise phones keep showing the cached old version. After pushing, close and reopen the app twice to pick up the update.
+If you change `index.html` or `foods.json`, bump the `CACHE` name in `sw.js` (for example `plate-v4` to `plate-v5`). Otherwise phones keep showing the cached old version. After pushing, close and reopen the app twice to pick up the update.
 
 ---
 
