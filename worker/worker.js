@@ -191,8 +191,19 @@ async function askGemini(prompt, env) {
   throw last;
 }
 
+// Gemini 2.5 models "think" before answering by default, which can take 30+ seconds.
+// Food estimates don't need it, so turn it off. Other models keep their default.
+const thinkingOff = (model) => (/^gemini-2\.5-flash/.test(model) ? { thinkingConfig: { thinkingBudget: 0 } } : {});
+const TIMEOUT_MS = 25000;
+
 async function askGeminiModel(model, prompt, env) {
-  const res = await fetch(`${GEMINI}${encodeURIComponent(model)}:generateContent`, {
+  const ctl = new AbortController();
+  const timer = setTimeout(() => ctl.abort(), TIMEOUT_MS);
+  const started = Date.now();
+  let res;
+  try {
+    res = await fetch(`${GEMINI}${encodeURIComponent(model)}:generateContent`, {
+    signal: ctl.signal,
     method: 'POST',
     headers: { 'Content-Type': 'application/json', 'x-goog-api-key': env.GEMINI_API_KEY },
     body: JSON.stringify({
@@ -202,9 +213,17 @@ async function askGeminiModel(model, prompt, env) {
         temperature: 0.2,
         responseMimeType: 'application/json',
         responseSchema: toGeminiSchema(RESULT_SCHEMA),
+        ...thinkingOff(model),
       },
     }),
-  });
+    });
+  } catch (e) {
+    if (e && e.name === 'AbortError') throw new AiError('provider_slow', `gemini ${model} took over ${TIMEOUT_MS / 1000}s`);
+    throw new AiError('provider_error', `gemini ${model} fetch failed`);
+  } finally {
+    clearTimeout(timer);
+  }
+  console.log('gemini', model, res.status, Date.now() - started + 'ms');
   if (res.status === 429) throw new AiError('provider_busy', 'gemini 429 ' + (await googleMessage(res)));
   if (!res.ok) throw new AiError('provider_error', `gemini ${res.status} ${model} ${await googleMessage(res)}`);
   const data = await res.json();
@@ -331,6 +350,7 @@ export default {
       const detail = str(e && e.detail, 240);
       console.log('ai error', msg, detail);
       if (msg === 'provider_busy') return reply({ error: 'busy', detail }, 503, c.headers);
+      if (msg === 'provider_slow') return reply({ error: 'slow', detail }, 504, c.headers);
       if (msg === 'missing_key') return reply({ error: 'not_set_up' }, 500, c.headers);
       return reply({ error: 'ai_failed', detail: detail || msg.slice(0, 120) }, 502, c.headers);
     }

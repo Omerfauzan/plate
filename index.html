@@ -1034,7 +1034,7 @@ async function callAi(body){
   const url=aiUrl();
   if(!url) throw new AiErr('not_set_up');
   if(navigator.onLine===false) throw new AiErr('offline');
-  const ctl=new AbortController(),t=setTimeout(()=>ctl.abort(),30000);
+  const ctl=new AbortController(),t=setTimeout(()=>ctl.abort(),35000);
   let res;
   try{res=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(Object.assign({device:deviceId()},body)),signal:ctl.signal});}
   catch(e){throw new AiErr(e&&e.name==='AbortError'?'slow':'offline');}
@@ -1042,6 +1042,7 @@ async function callAi(body){
   let data=null;try{data=await res.json();}catch(e){}
   if(res.status===429) throw new AiErr('limit');
   if(res.status===503) throw new AiErr('busy');
+  if(res.status===504) throw new AiErr('slow',data&&data.detail?String(data.detail).slice(0,200):'');
   if(!res.ok||!data||!Array.isArray(data.items)) throw new AiErr(data&&data.error==='not_set_up'?'not_set_up':'failed',data&&data.detail?String(data.detail).slice(0,200):'HTTP '+res.status);
   return data;
 }
