@@ -277,6 +277,41 @@ button.ins-row:hover{background:var(--bg)}
 textarea{width:100%;min-width:0;padding:10px 12px;font:13px/1.4 var(--f-mono);color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:10px;resize:vertical}
 .note{margin:0;text-align:center;font-size:12.5px;color:var(--ink-2)}
 .toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(18px + env(safe-area-inset-bottom,0px));max-width:calc(100% - 32px);padding:11px 16px;border-radius:12px;background:var(--ink);color:var(--bg);font-weight:600;font-size:14px;z-index:40}
+#aiText{font:16px/1.4 var(--f-body);min-height:84px}
+.rv-wrap{display:grid;gap:12px;padding-top:4px}
+.rv-h{display:grid;gap:2px}
+.rv-h b{font:700 16px var(--f-display)}
+.rv-h span{font:500 12.5px var(--f-mono);color:var(--ink-2)}
+.rv-list{border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.rv + .rv{border-top:1px solid var(--line)}
+.rv-main{display:flex;justify-content:space-between;gap:12px;width:100%;text-align:left;background:var(--surface);border:0;padding:11px 12px}
+.rv-main:hover{background:var(--bg)}
+.rv-main .l{min-width:0}
+.rv-main .n{margin:0;font-weight:600;overflow-wrap:anywhere}
+.rv-main .n .amt{font-weight:400;color:var(--ink-2)}
+.rv-main .as{margin:2px 0 0;font-size:12.5px;color:var(--ink-2);overflow-wrap:anywhere}
+.rv-main .m{margin:2px 0 0;font:400 12px var(--f-mono);color:var(--ink-2)}
+.rv-main .r{text-align:right;flex:none}
+.rv-main .k{margin:0;font:600 15px var(--f-display);font-variant-numeric:tabular-nums;white-space:nowrap}
+.rv-main .rg{margin:2px 0 0;font:400 11.5px var(--f-mono);color:var(--ink-2);white-space:nowrap}
+.src{display:inline-block;margin-right:6px;padding:0 6px;border-radius:999px;font:600 10px/1.6 var(--f-body);letter-spacing:.05em;text-transform:uppercase;vertical-align:1px;background:var(--surface-2);color:var(--ink-2)}
+.src.mine{background:var(--accent-soft);color:var(--accent)}
+.src.ai{background:var(--under-soft);color:var(--under)}
+.rv-edit{display:grid;gap:10px;padding:4px 12px 12px;background:var(--surface)}
+.rv-edit .amtrow{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;align-items:end}
+.rv-edit .unit{padding-bottom:12px;font-size:13px;color:var(--ink-2)}
+.fixrow{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px}
+.fixrow .mini{min-height:44px;padding:8px 16px}
+.check{display:flex;gap:10px;align-items:flex-start;font-size:14.5px;font-weight:600}
+.check input{width:20px;height:20px;margin:1px 0 0;flex:none;accent-color:var(--accent)}
+.mf-row{display:flex;justify-content:space-between;gap:12px;width:100%;text-align:left;background:none;border:0;border-top:1px solid var(--line);padding:10px 2px}
+.mf-row:first-child{border-top:0}
+.mf-row b{display:block;font-size:14px;overflow-wrap:anywhere}
+.mf-row span{font:400 12px var(--f-mono);color:var(--ink-2)}
+.mf-row .k{flex:none;font:600 14px var(--f-display)}
+.consent{display:grid;gap:10px}
+.consent p{margin:0}
+.consent ul{margin:0;padding-left:20px;display:grid;gap:6px}
 @media (max-width:380px){.hero-top{grid-template-columns:112px minmax(0,1fr)}.ring,.ring svg{width:112px;height:112px}.left{font-size:26px}}
 </style>
 </head>
@@ -382,6 +417,38 @@ textarea{width:100%;min-width:0;padding:10px 12px;font:13px/1.4 var(--f-mono);co
     <section class="strip" id="strip" aria-label="This week"></section>
 
     <button type="button" class="primary" id="addBtn">Add food</button>
+
+    <section id="aiWrap" class="card" hidden>
+      <form id="aiForm" class="form" novalidate>
+        <h2 id="aiTitle">Add food</h2>
+        <div class="seg" role="radiogroup" aria-label="Meal">
+          <label><input type="radio" name="ameal" value="Meal 1" checked><span>Meal 1</span></label>
+          <label><input type="radio" name="ameal" value="Meal 2"><span>Meal 2</span></label>
+          <label><input type="radio" name="ameal" value="Snack"><span>Snack</span></label>
+        </div>
+        <label class="f" for="aiText">What did you eat?
+          <textarea id="aiText" rows="3" maxlength="600" autocomplete="off" placeholder="e.g. 2 noshu bars, half chicken from El Jannah, 500 g mandi rice, 3 big lamb pieces"></textarea>
+        </label>
+        <div class="actions2">
+          <button type="submit" class="primary" id="aiGo">Work it out</button>
+          <button type="button" class="ghost" id="aiCancel">Cancel</button>
+        </div>
+        <p class="hint" id="aiHint"></p>
+        <div id="aiReview" class="rv-wrap" hidden>
+          <div class="rv-h"><b>Check these</b><span id="rvTot"></span></div>
+          <div class="rv-list" id="rvList"></div>
+          <p class="hint" id="rvNote" hidden></p>
+          <div class="fixrow">
+            <input id="fixText" type="text" maxlength="300" autocomplete="off" placeholder="Fix in words, e.g. change the bread to focaccia" aria-label="Fix in words">
+            <button type="button" class="mini" id="fixGo">Fix</button>
+          </div>
+          <button type="button" class="primary" id="rvAdd">Add</button>
+          <p class="hint" style="text-align:center">All numbers are estimates, not medical advice.</p>
+        </div>
+        <button type="button" class="linkbtn" id="aiManual" style="justify-self:start">Enter numbers by hand instead</button>
+      </form>
+    </section>
+
     <div class="quick" id="quickWrap" hidden>
       <p>Quick add</p>
       <div class="chips" id="quick"></div>
@@ -539,6 +606,10 @@ textarea{width:100%;min-width:0;padding:10px 12px;font:13px/1.4 var(--f-mono);co
         <label class="f" for="sGymWk">Gym sessions a week<input id="sGymWk" type="number" inputmode="decimal" min="0" max="14" step="0.5"></label>
       </div>
       <label class="f" for="sPerKg">kcal per kg body fat<input id="sPerKg" type="number" inputmode="numeric" min="1000"></label>
+      <h3>Food entry</h3>
+      <label class="check" for="sAi"><input id="sAi" type="checkbox"><span>Use AI for foods that aren’t in your list</span></label>
+      <p class="hint">When on, what you type in Add food is sent to an AI service (Google Gemini) to estimate the numbers. Foods already in your list never leave your phone.</p>
+      <button type="button" class="ghost" id="sMine">My foods</button>
       <button type="submit" class="primary">Save settings</button>
     </form>
   </section>
@@ -584,8 +655,8 @@ let toastT=0;
 function toast(m){const t=$('toast');t.textContent=m;t.hidden=false;clearTimeout(toastT);toastT=setTimeout(()=>{t.hidden=true;},2800);}
 
 /* ---------- state ---------- */
-const DEFAULTS={name:'',sex:'',age:0,height:0,weight:0,kcal:2000,p:150,f:70,c:200,bmr:1800,mult:1.2,stand:0,base:3000,per:0.04,usual:6000,gym:300,gymWk:0,perKg:7700,setup:false};
-let S={settings:Object.assign({},DEFAULTS),foods:[],days:{}};
+const DEFAULTS={name:'',sex:'',age:0,height:0,weight:0,kcal:2000,p:150,f:70,c:200,bmr:1800,mult:1.2,stand:0,base:3000,per:0.04,usual:6000,gym:300,gymWk:0,perKg:7700,setup:false,aiOff:false,aiOk:false};
+let S={settings:Object.assign({},DEFAULTS),foods:[],days:{},mine:[]};
 const todayStr=ymd(new Date());
 let cur=todayStr,editingId=null,delArmed=false,delT=0,view='day',storageOk=true;
 
@@ -617,7 +688,23 @@ function cleanState(d){
     if(w!=null&&w>0) o.weight=w; if(s!=null&&s>=0) o.steps=s; if(v.gym===true||v.gym===false) o.gym=v.gym;
     if(Object.keys(o).length) days[k]=o;
   }
-  return {settings:st,foods,days};
+  const mine=[],mseen=new Set();
+  if(Array.isArray(d.mine)) for(const r of d.mine){const c=cleanMine(r);if(!c||mseen.has(c.id)) continue;mseen.add(c.id);mine.push(c);}
+  return {settings:st,foods,days,mine};
+}
+// A saved food in "My foods". kcal/p/f/c are for qty unit (e.g. 1 bar, or 500 g).
+function cleanMine(o){
+  if(!o||typeof o!=='object') return null;
+  const name=String(o.name||'').trim().slice(0,80);if(!name) return null;
+  const kcal=num(o.kcal);if(kcal==null||kcal<0) return null;
+  const m=v=>{const n=num(v);return n==null||n<0?null:n;};
+  const qty=m(o.qty)||1,lo=m(o.lo),hi=m(o.hi);
+  return {id:typeof o.id==='string'&&o.id?o.id.slice(0,60):'m'+newId(),name,
+    aka:Array.isArray(o.aka)?o.aka.filter(a=>typeof a==='string'&&a.trim()).map(a=>a.trim().slice(0,80)).slice(0,12):[],
+    qty,unit:String(o.unit||'serve').slice(0,20),g:m(o.g),kcal,p:m(o.p),f:m(o.f),c:m(o.c),
+    lo:lo!=null&&lo<=kcal?lo:null,hi:hi!=null&&hi>=kcal?hi:null,note:String(o.note||'').slice(0,120),
+    src:['ai','built-in','me'].includes(o.src)?o.src:'me',seed:typeof o.seed==='string'?o.seed.slice(0,60):'',
+    n:Math.max(0,Math.round(num(o.n)||0)),last:DATE.test(String(o.last))?o.last:''};
 }
 function save(){
   try{localStorage.setItem(KEY,JSON.stringify(S));return true;}
@@ -751,7 +838,10 @@ function renderQuick(){
 function showSugg(){
   const q=$('fName').value.trim().toLowerCase(),box=$('sugg');box.replaceChildren();
   if(q.length<1||editingId){box.hidden=true;return;}
-  const hits=library().filter(e=>e.f.name.toLowerCase().includes(q)).sort((a,b)=>b.n-a.n).slice(0,6);
+  const seen=new Set(),pool=[];
+  for(const m of S.mine){const a=amtText(m),f={name:(m.name+(a?' · '+a:'')).slice(0,80),kcal:m.kcal,p:m.p,f:m.f,c:m.c};seen.add(f.name.toLowerCase());pool.push({f,n:m.n+1,hay:[m.name].concat(m.aka).join(' ').toLowerCase()});}
+  for(const e of library()) if(!seen.has(e.f.name.toLowerCase())) pool.push({f:e.f,n:e.n,hay:e.f.name.toLowerCase()});
+  const hits=pool.filter(e=>e.hay.includes(q)).sort((a,b)=>b.n-a.n).slice(0,6);
   if(!hits.length||(hits.length===1&&hits[0].f.name.toLowerCase()===q)){box.hidden=true;return;}
   for(const e of hits) box.append(el('button',{type:'button',onclick:()=>{fillForm(e.f);box.hidden=true;}},el('span',{text:e.f.name}),el('span',{text:kc(e.f.kcal)+' kcal'})));
   box.hidden=false;
@@ -777,10 +867,10 @@ function openForm(edit,prefill){
   $('formWrap').scrollIntoView({block:'nearest',behavior:reduce?'auto':'smooth'});
   if(!edit&&!prefill) $('fName').focus({preventScroll:true});
 }
-function closeForm(){$('formWrap').hidden=true;editingId=null;disarm();}
+function closeForm(){$('formWrap').hidden=true;$('aiWrap').hidden=true;editingId=null;disarm();}
 function disarm(){delArmed=false;clearTimeout(delT);$('delBtn').textContent='Delete this food';}
 $('fName').addEventListener('input',showSugg);
-$('addBtn').addEventListener('click',()=>{if(!$('formWrap').hidden&&!editingId){closeForm();return;}openForm();});
+$('addBtn').addEventListener('click',()=>{if(!$('aiWrap').hidden){closeAi();return;}openAi();});
 $('cancelBtn').addEventListener('click',closeForm);
 form.addEventListener('submit',e=>{
   e.preventDefault();
@@ -793,7 +883,9 @@ form.addEventListener('submit',e=>{
   const before=S.foods;
   if(editingId) S.foods=S.foods.map(f=>f.id===editingId?Object.assign({id:editingId},obj):f);
   else S.foods=S.foods.concat([Object.assign({id:newId()},obj)]);
-  if(!save()){S.foods=before;return;}
+  const beforeM=JSON.stringify(S.mine);
+  if(!editingId&&name.indexOf(' · ')<0) learn({name:obj.name,said:'',qty:1,unit:'serve',grams:0,kcal,p:obj.p,f:obj.f,c:obj.c,lo:null,hi:null,assumption:'',src:'you',edited:true,foodId:'',seed:''});
+  if(!save()){S.foods=before;S.mine=JSON.parse(beforeM);return;}
   lastMeal=meal;const was=editingId;closeForm();toast(was?'Updated':'Added '+name);renderDay();
 });
 $('delBtn').addEventListener('click',()=>{
@@ -803,6 +895,409 @@ $('delBtn').addEventListener('click',()=>{
   if(!save()){S.foods=before;return;}
   closeForm();toast('Deleted');renderDay();
 });
+
+/* ---------- food matching (my foods + built-in list) ---------- */
+// The worker URL isn't secret. localStorage override is only for testing.
+const AI_URL_DEFAULT='';
+const aiUrl=()=>{try{return localStorage.getItem('plate-ai-url')||AI_URL_DEFAULT;}catch(e){return AI_URL_DEFAULT;}};
+let SEED=[];
+fetch('foods.json').then(r=>r.ok?r.json():null).then(d=>{if(d&&Array.isArray(d.foods)) SEED=d.foods.map(f=>Object.assign({src:'built-in'},f));}).catch(()=>{});
+
+const STOP=new Set('a an the of from at with my i had ate eat eaten some plus x pcs pc about around approx like just also and then for me'.split(' '));
+const NUMW={a:1,an:1,one:1,two:2,three:3,four:4,five:5,six:6,seven:7,eight:8,nine:9,ten:10,couple:2,pair:2};
+const FRACW={half:0.5,quarter:0.25};
+function normTxt(s){
+  return String(s).toLowerCase().replace(/[’'`]/g,'').replace(/½|\b1\/2\b/g,' half ').replace(/¼|\b1\/4\b/g,' quarter ').replace(/¾|\b3\/4\b/g,' 0.75 ')
+    .replace(/[^a-z0-9.\/]+/g,' ').replace(/\s+/g,' ').trim();
+}
+function stem(w){
+  if(w.length>4&&w.endsWith('ies')) return w.slice(0,-3)+'y';
+  if(w.length>4&&/(ch|sh|x|z|o)es$/.test(w)) return w.slice(0,-2);
+  if(w.length>3&&w.endsWith('s')&&!w.endsWith('ss')) return w.slice(0,-1);
+  return w;
+}
+const toks=s=>normTxt(s).split(' ').filter(w=>w&&!STOP.has(w)&&!/^\d+(\.\d+)?$/.test(w)).map(stem);
+function lev(a,b){
+  if(Math.abs(a.length-b.length)>2) return 9;
+  let prev=Array.from({length:b.length+1},(_,i)=>i);
+  for(let i=1;i<=a.length;i++){const row=[i];for(let j=1;j<=b.length;j++) row[j]=Math.min(prev[j]+1,row[j-1]+1,prev[j-1]+(a[i-1]===b[j-1]?0:1));prev=row;}
+  return prev[b.length];
+}
+function tokEq(a,b){
+  if(a===b) return true;
+  const n=Math.min(a.length,b.length);
+  if(n<5) return false;
+  const d=lev(a,b);return d<=1||(n>=8&&d<=2);
+}
+// Pull the amount out of one piece of text: "2 noshu bars", "500g rice", "half chicken", "1400 calories".
+function parseQty(raw){
+  let s=normTxt(raw),amount=null,unit=null,energy=null,count=null,frac=null;
+  s=s.replace(/(\d+(?:\.\d+)?)\s*(kj|kcal|cals?|calories)\b/,(m,n,u)=>{energy=u==='kj'?Number(n)/4.184:Number(n);return ' ';});
+  s=s.replace(/(\d+(?:\.\d+)?)\s*(kg|kgs|g|gm|gms|gr|grams?|ml|mls|millilitres?|l|litres?|liters?)\b/,(m,n,u)=>{
+    const v=Number(n);if(/^kg/.test(u)){amount=v*1000;unit='g';}else if(/^(g|gm|gr)/.test(u)){amount=v;unit='g';}
+    else if(/^(ml|milli)/.test(u)){amount=v;unit='ml';}else{amount=v*1000;unit='ml';}return ' ';});
+  s=s.replace(/\bx\s*(\d+(?:\.\d+)?)\b|\b(\d+(?:\.\d+)?)\s*x\b/,(m,a1,a2)=>{count=Number(a1||a2);return ' ';});
+  s=s.trim().replace(/^(\d+\/\d+|\d+(?:\.\d+)?)\b/,m=>{const p=m.split('/');count=(count||1)*(p.length===2?Number(p[0])/Number(p[1]):Number(p[0]));return ' ';}).trim();
+  const w=s.split(' ');
+  if(w[0] in NUMW){count=(count||1)*NUMW[w[0]];w.shift();if(w[0]==='of') w.shift();}
+  if(w[0] in FRACW){frac=w[0];w.shift();if(w[0]==='a'||w[0]==='of') w.shift();if(w[0]==='a') w.shift();}
+  const rest=w.join(' ').trim();
+  return {amount,unit,energy,count,frac,rest,named:((frac?frac+' ':'')+rest).trim()};
+}
+function splitText(t){return String(t).split(/[,;\n+&]|\band\b|\bplus\b|\bthen\b/i).map(x=>x.trim()).filter(Boolean);}
+const isWeight=u=>u==='g'||u==='ml';
+const tokCache=new Map();
+function phraseToks(p){let t=tokCache.get(p);if(!t){t=toks(p);tokCache.set(p,t);}return t;}
+function allFoods(){
+  const used=new Set(S.mine.map(m=>m.seed).filter(Boolean));
+  return S.mine.map(f=>Object.assign({src:'mine'},f,{mine:true})).concat(SEED.filter(f=>!used.has(f.id)));
+}
+// How well do the user's words fit this food? 1 = every word matched and the food name fully covered.
+function fit(words,food){
+  let best=0;
+  for(const ph of [food.name].concat(food.aka||[])){
+    const pt=phraseToks(ph);if(!pt.length) continue;
+    if(pt.some(x=>x in FRACW&&!words.includes(x))) continue; // "half chicken" must not match "quarter chicken"
+    if(!words.every(w=>pt.some(x=>tokEq(w,x)))) continue;
+    const cov=pt.filter(x=>words.some(w=>tokEq(w,x))).length/pt.length;
+    if(cov>best) best=cov;
+  }
+  return best;
+}
+function bestMatch(q){
+  const foods=allFoods(),base=toks(q.rest);
+  const tries=[{words:base,fracInName:false}];
+  if(q.frac) tries.push({words:[q.frac].concat(base),fracInName:true});
+  let best=null;
+  for(const t of tries){
+    if(!t.words.length) continue;
+    for(const f of foods){
+      const cov=fit(t.words,f);if(cov<0.66) continue;
+      const score=cov+(f.mine?0.25:0)+Math.min(f.n||0,10)*0.01+(t.fracInName?0.05:0);
+      if(!best||score>best.score) best={food:f,score,cov,fracInName:t.fracInName};
+    }
+  }
+  return best;
+}
+// How many of the saved portion does the user mean? null = can't tell without AI.
+function factorFor(food,q,fracInName){
+  const fm=q.frac&&!fracInName?FRACW[q.frac]:1;
+  if(q.amount!=null){
+    if(isWeight(food.unit)) return q.amount/food.qty*(q.count||1);
+    if(food.g) return q.amount/food.g;
+    return null;
+  }
+  if(isWeight(food.unit)&&food.qty===100&&!food.mine) return null; // "rice" with no amount: per-100 g food, needs a portion guess
+  return (q.count||1)*fm/(isWeight(food.unit)?1:food.qty);
+}
+const r1=n=>Math.round(n*10)/10;
+function scaleItem(it,k){
+  const o=Object.assign({},it);
+  o.qty=r1(it.qty*k);o.kcal=Math.round(it.kcal*k);o.grams=it.grams?Math.round(it.grams*k):0;
+  for(const m of ['p','f','c']) o[m]=it[m]==null?null:r1(it[m]*k);
+  o.lo=it.lo!=null?Math.round(it.lo*k):null;o.hi=it.hi!=null?Math.round(it.hi*k):null;
+  return o;
+}
+let rvSeq=0;
+function itemFromFood(food,k,said){
+  const base={key:'k'+(rvSeq++),name:food.name,said,qty:food.qty,unit:food.unit,grams:food.g||(isWeight(food.unit)?food.qty:0),
+    kcal:food.kcal,p:food.p,f:food.f,c:food.c,lo:food.lo!=null?food.lo:Math.round(food.kcal*.85),hi:food.hi!=null?food.hi:Math.round(food.kcal*1.15),
+    assumption:food.note||'',src:food.mine?'mine':'built-in',foodId:food.mine?food.id:'',seed:food.mine?(food.seed||''):food.id};
+  return scaleItem(base,k);
+}
+function resolvePiece(piece){
+  const q=parseQty(piece);
+  if(q.energy!=null&&!toks(q.rest).length){
+    const k=Math.round(q.energy);
+    return {key:'k'+(rvSeq++),name:'Calories',said:piece,qty:1,unit:'serve',grams:0,kcal:k,p:null,f:null,c:null,lo:k,hi:k,assumption:'number you gave',src:'you',foodId:'',seed:''};
+  }
+  if(q.energy!=null) return null;
+  const m=bestMatch(q);if(!m) return null;
+  const k=factorFor(m.food,q,m.fracInName);if(k==null||!(k>0)||k>50) return null;
+  return itemFromFood(m.food,k,piece);
+}
+function amtText(it){
+  if(isWeight(it.unit)) return kc(it.qty)+' '+it.unit;
+  const q=r1(it.qty);
+  if(it.unit==='half'||it.unit==='quarter'||it.unit==='serve') return q===1?'':q+'×';
+  return q+' '+(q===1?it.unit:(/(ch|sh|s|x)$/.test(it.unit)?it.unit+'es':it.unit+'s'));
+}
+const portionText=f=>{const a=amtText({qty:f.qty,unit:f.unit});return a||'1 '+f.unit;};
+
+/* ---------- AI ---------- */
+function deviceId(){
+  try{let d=localStorage.getItem('plate-device');if(!d){d='d-'+Math.random().toString(36).slice(2,12)+Date.now().toString(36);localStorage.setItem('plate-device',d);}return d;}
+  catch(e){return 'd-nostorage-'+todayStr.replace(/-/g,'');}
+}
+class AiErr extends Error{constructor(kind){super(kind);this.kind=kind;}}
+async function callAi(body){
+  const url=aiUrl();
+  if(!url) throw new AiErr('not_set_up');
+  if(navigator.onLine===false) throw new AiErr('offline');
+  const ctl=new AbortController(),t=setTimeout(()=>ctl.abort(),30000);
+  let res;
+  try{res=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(Object.assign({device:deviceId()},body)),signal:ctl.signal});}
+  catch(e){throw new AiErr(e&&e.name==='AbortError'?'slow':'offline');}
+  finally{clearTimeout(t);}
+  let data=null;try{data=await res.json();}catch(e){}
+  if(res.status===429) throw new AiErr('limit');
+  if(res.status===503) throw new AiErr('busy');
+  if(!res.ok||!data||!Array.isArray(data.items)) throw new AiErr(data&&data.error==='not_set_up'?'not_set_up':'failed');
+  return data;
+}
+const AI_MSG={
+  not_set_up:'AI isn’t set up yet. Foods in your list still work, or enter this one by hand.',
+  offline:'No internet right now. Foods in your list still work, or enter this one by hand.',
+  slow:'The AI took too long. Try again in a moment.',
+  limit:'You’ve used today’s AI limit. It resets tomorrow. Foods in your list still work.',
+  busy:'The AI is busy right now. Try again in a minute.',
+  failed:'The AI didn’t work this time. Try again, or enter it by hand.'
+};
+function fromAi(o){
+  const n=v=>{const x=Number(v);return Number.isFinite(x)&&x>=0?x:0;};
+  const kcal=Math.round(n(o.kcal));
+  return {key:'k'+(rvSeq++),name:String(o.name||'Food').slice(0,80),said:String(o.said||'').slice(0,120),qty:n(o.qty)||1,unit:String(o.unit||'serve').slice(0,20),
+    grams:Math.round(n(o.grams)),kcal,p:r1(n(o.p)),f:r1(n(o.f)),c:r1(n(o.c)),lo:Math.round(n(o.lo))||Math.round(kcal*.85),hi:Math.round(n(o.hi))||Math.round(kcal*1.15),
+    assumption:String(o.assumption||'').slice(0,120),src:'ai',foodId:'',seed:''};
+}
+const knownOut=it=>({ref:it.key,name:it.name,said:it.said,portion:amtText(it)||('1 '+it.unit),kcal:it.kcal,p:it.p||0,f:it.f||0,c:it.c||0});
+const itemOut=it=>({name:it.name,said:it.said,qty:it.qty,unit:it.unit,grams:it.grams,kcal:it.kcal,p:it.p||0,f:it.f||0,c:it.c||0,lo:it.lo||0,hi:it.hi||0,assumption:it.assumption,ref:it.key,changed:false});
+// Saved foods that share a word with the unknown bits, so the AI can reuse your numbers.
+function savedHints(pieces){
+  const words=new Set(pieces.flatMap(p=>toks(parseQty(p).rest)));if(!words.size) return [];
+  const out=[];
+  for(const f of S.mine){
+    const ft=[f.name].concat(f.aka).flatMap(phraseToks);
+    if(ft.some(x=>[...words].some(w=>tokEq(w,x)))) out.push(f);
+    if(out.length>=10) break;
+  }
+  return out.map(f=>({ref:'m:'+f.id,name:f.name,said:'',portion:portionText(f),kcal:f.kcal,p:f.p||0,f:f.f||0,c:f.c||0}));
+}
+
+/* ---------- add food card ---------- */
+let draft=[],draftText='',aiBusy=false,openKey=null;
+function aiOn(){return !S.settings.aiOff;}
+function openAi(){
+  closeForm();
+  $('aiTitle').textContent='Add food · '+longDate(parse(cur));
+  $('aiForm').elements.ameal.value=lastMeal;
+  $('aiHint').textContent=aiOn()?'Foods in your list are instant. New ones go to AI to estimate.':'AI is off. Only foods in your list will be found.';
+  $('aiWrap').hidden=false;
+  const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
+  $('aiWrap').scrollIntoView({block:'nearest',behavior:reduce?'auto':'smooth'});
+  if(!draft.length) $('aiText').focus({preventScroll:true});
+}
+function closeAi(clear){
+  $('aiWrap').hidden=true;
+  if(clear){draft=[];draftText='';openKey=null;$('aiText').value='';$('fixText').value='';renderDraft();}
+}
+function setBusy(b,which){
+  aiBusy=b;
+  $('aiGo').disabled=b;$('fixGo').disabled=b;$('rvAdd').disabled=b;
+  $('aiGo').textContent=b&&which==='go'?'Working it out…':'Work it out';
+  $('fixGo').textContent=b&&which==='fix'?'…':'Fix';
+}
+function askConsent(then){
+  const ok=el('button',{type:'button',class:'primary',onclick:()=>{
+    S.settings.aiOk=true;save();closeInfo();then();}},'OK, use AI');
+  openInfo('Before you use AI',[el('div',{class:'consent'},
+    el('p',{text:'To estimate foods that aren’t in your list, Plate sends what you type to an AI service (Google Gemini).'}),
+    el('ul',{},
+      el('li',{text:'Only the food text is sent, plus matching foods from your list. Never your name, weight or log.'}),
+      el('li',{text:'Google’s free AI tier may use what’s sent to improve its products, so don’t type anything private.'}),
+      el('li',{text:'All numbers are estimates, not medical advice. Check them before you add.'})),
+    el('p',{class:'hint',text:'You can turn AI off any time in Settings.'})),ok,
+    el('button',{type:'button',class:'ghost',onclick:closeInfo},'Not now')]);
+}
+async function workItOut(){
+  const text=$('aiText').value.trim();
+  if(!text){toast('Type what you ate first.');$('aiText').focus();return;}
+  if(aiBusy) return;
+  const pieces=splitText(text),local=[],unknown=[];
+  for(const p of pieces){const it=resolvePiece(p);if(it) local.push(it); else unknown.push(p);}
+  draftText=text;openKey=null;
+  if(!unknown.length){draft=local;renderDraft('');return;}
+  if(!aiOn()){draft=local;renderDraft('Not in your list: '+unknown.join(', ')+'. Turn on AI in Settings, or enter it by hand.');return;}
+  if(!S.settings.aiOk){askConsent(workItOut);return;}
+  setBusy(true,'go');
+  try{
+    const data=await callAi({mode:'parse',text,known:local.map(knownOut),saved:savedHints(unknown)});
+    const byKey=new Map(local.map(i=>[i.key,i])),byName=new Map(local.map(i=>[i.name.trim().toLowerCase(),i])),used=new Set(),out=[];
+    const take=it=>{if(!used.has(it.key)){out.push(it);used.add(it.key);}};
+    for(const o of data.items){
+      if(o.ref&&byKey.has(o.ref)){take(byKey.get(o.ref));continue;}
+      const it=fromAi(o),same=byName.get(it.name.trim().toLowerCase());
+      if(same){take(same);continue;} // AI re-estimated something we already had: keep ours, once
+      if(o.ref&&o.ref.slice(0,2)==='m:'){const f=S.mine.find(m=>m.id===o.ref.slice(2));if(f){it.foodId=f.id;it.src='mine';}}
+      out.push(it);
+    }
+    for(const it of local) take(it);
+    draft=out;renderDraft(data.note||'');
+  }catch(e){
+    draft=local;
+    renderDraft((AI_MSG[e.kind]||AI_MSG.failed)+(unknown.length?' Not found: '+unknown.join(', ')+'.':''));
+  }finally{setBusy(false);}
+}
+async function fixInWords(){
+  const ins=$('fixText').value.trim();
+  if(!ins){$('fixText').focus();return;}
+  if(aiBusy) return;
+  if(!aiOn()){toast('Turn on AI in Settings to fix in words, or tap an item to edit it.');return;}
+  if(!S.settings.aiOk){askConsent(fixInWords);return;}
+  setBusy(true,'fix');
+  try{
+    const data=await callAi({mode:'fix',text:ins,original:draftText,items:draft.map(itemOut),saved:savedHints([ins])});
+    const byKey=new Map(draft.map(i=>[i.key,i])),out=[];
+    for(const o of data.items){
+      const old=o.ref&&byKey.get(o.ref);
+      if(old&&!o.changed){out.push(old);continue;}
+      const it=fromAi(o);
+      if(old&&old.name.toLowerCase()===it.name.toLowerCase()){it.foodId=old.foodId;it.seed=old.seed;}
+      else if(old) it.said=''; // a different food now, so the old words shouldn't become its nickname
+      out.push(it);
+    }
+    if(!out.length){toast('That would remove everything. Tap Cancel to start over.');return;}
+    draft=out;$('fixText').value='';openKey=null;renderDraft(data.note||'');
+  }catch(e){toast(AI_MSG[e.kind]||AI_MSG.failed);}
+  finally{setBusy(false);}
+}
+const SRC_TXT={mine:'Your list','built-in':'Built-in',ai:'AI est',you:'Your number',edited:'Edited'};
+function rowMain(it){
+  const has=it.p!=null||it.f!=null||it.c!=null,amt=amtText(it);
+  const tag=it.edited?'edited':it.src;
+  return [el('div',{class:'l'},
+      el('p',{class:'n'},it.name,amt?el('span',{class:'amt',text:' · '+amt}):null),
+      el('p',{class:'as'},el('span',{class:'src '+(tag==='mine'?'mine':tag==='ai'?'ai':''),text:SRC_TXT[tag]}),it.assumption||''),
+      el('p',{class:'m',text:has?'P '+g1(it.p||0)+' · F '+g1(it.f||0)+' · C '+g1(it.c||0):'calories only'})),
+    el('div',{class:'r'},el('p',{class:'k',text:kc(it.kcal)}),
+      it.lo!=null&&it.hi!=null&&(it.lo!==it.kcal||it.hi!==it.kcal)?el('p',{class:'rg',text:kc(it.lo)+'–'+kc(it.hi)}):null)];
+}
+function draftTotals(){
+  const t=totalsOf(draft.map(i=>({kcal:i.kcal,p:i.p,f:i.f,c:i.c})));
+  let lo=0,hi=0;for(const i of draft){lo+=i.lo!=null?i.lo:i.kcal;hi+=i.hi!=null?i.hi:i.kcal;}
+  $('rvTot').textContent=kc(t.kcal)+' kcal'+(lo!==hi?' ('+kc(lo)+'–'+kc(hi)+')':'')+' · P '+g1(t.p)+' F '+g1(t.f)+' C '+g1(t.c);
+  $('rvAdd').textContent=draft.length===1?'Add 1 food':'Add '+draft.length+' foods';
+}
+function editBox(it,main){
+  const upd=()=>{it.edited=true;main.replaceChildren(...rowMain(it));draftTotals();};
+  const numIn=(label,key,step)=>{
+    const i=el('input',{type:'number',inputmode:'decimal',min:'0',step,value:it[key]!=null?String(it[key]):'',placeholder:'opt.'});
+    i.addEventListener('input',()=>{const n=num(i.value);it[key]=n!=null&&n>=0?n:(key==='kcal'?0:null);if(key==='kcal'){it.lo=it.hi=it.kcal;}upd();});
+    return [el('label',{class:'f'},label,i),i];
+  };
+  const [kL,kI]=numIn('Calories (kcal)','kcal','1'),[pL,pI]=numIn('Protein (g)','p','0.1'),[fL,fI]=numIn('Fat (g)','f','0.1'),[cL,cI]=numIn('Carbs (g)','c','0.1');
+  const name=el('input',{type:'text',maxlength:'80',value:it.name});
+  name.addEventListener('input',()=>{it.name=name.value.trim()||'Food';upd();});
+  const amt=el('input',{type:'number',inputmode:'decimal',min:'0',step:isWeight(it.unit)?'10':'0.5',value:String(r1(it.qty))});
+  amt.addEventListener('input',()=>{
+    const n=num(amt.value);if(n==null||!(n>0)||!(it.qty>0)) return;
+    const s=scaleItem(it,n/it.qty);s.qty=n;Object.assign(it,s);
+    kI.value=it.kcal;pI.value=it.p!=null?it.p:'';fI.value=it.f!=null?it.f:'';cI.value=it.c!=null?it.c:'';upd();
+  });
+  return el('div',{class:'rv-edit'},
+    el('label',{class:'f'},'Name',name),
+    el('div',{class:'amtrow'},el('label',{class:'f'},'Amount (numbers scale with it)',amt),el('span',{class:'unit',text:it.unit})),
+    kL,el('div',{class:'row3'},pL,fL,cL),
+    el('button',{type:'button',class:'danger',onclick:()=>{draft=draft.filter(x=>x!==it);openKey=null;renderDraft(null);}},'Remove this item'));
+}
+function renderDraft(note){
+  const box=$('rvList');box.replaceChildren();
+  $('aiReview').hidden=!draft.length&&!note;
+  $('rvAdd').hidden=!draft.length;
+  if(note!==null&&note!==undefined){$('rvNote').hidden=!note;$('rvNote').textContent=note||'';}
+  for(const it of draft){
+    const main=el('button',{type:'button',class:'rv-main','aria-expanded':String(openKey===it.key),'aria-label':'Edit '+it.name},...rowMain(it));
+    const row=el('div',{class:'rv'},main);
+    main.addEventListener('click',()=>{openKey=openKey===it.key?null:it.key;renderDraft(null);});
+    if(openKey===it.key) row.append(editBox(it,main));
+    box.append(row);
+  }
+  $('fixText').closest('.fixrow').hidden=!draft.length;
+  draftTotals();
+}
+// Save or update a food in My foods from a confirmed item.
+function learn(it){
+  const per=isWeight(it.unit)||!(it.qty>0)?1:it.qty;
+  const base=scaleItem(it,1/per);
+  const said=parseQty(it.said||'').named;
+  const nk=it.name.trim().toLowerCase();
+  let f=it.foodId?S.mine.find(m=>m.id===it.foodId):null;
+  if(!f&&it.seed) f=S.mine.find(m=>m.seed===it.seed);
+  if(!f) f=S.mine.find(m=>m.name.trim().toLowerCase()===nk);
+  const src=it.edited||it.src==='you'?'me':it.src==='ai'?'ai':it.src==='built-in'?'built-in':(f?f.src:'me');
+  const seedFood=it.seed&&!f?SEED.find(s=>s.id===it.seed):null;
+  const aka=new Set((f?f.aka:(seedFood?seedFood.aka:[])).slice());
+  if(said&&said.toLowerCase()!==nk) aka.add(said);
+  const rec=cleanMine({id:f?f.id:'m'+newId(),name:it.name,aka:[...aka].slice(-12),qty:isWeight(it.unit)?it.qty:1,unit:it.unit,
+    g:base.grams||null,kcal:base.kcal,p:base.p,f:base.f,c:base.c,lo:base.lo,hi:base.hi,note:it.assumption,src,
+    seed:f?f.seed:(it.seed||''),n:(f?f.n:0)+1,last:cur});
+  if(!rec) return;
+  if(f) Object.assign(f,rec); else S.mine.push(rec);
+}
+function trimMine(){
+  if(S.mine.length<=600) return;
+  S.mine.sort((a,b)=>b.n-a.n||String(b.last).localeCompare(String(a.last)));S.mine.length=600;
+}
+function confirmDraft(){
+  if(!draft.length||aiBusy) return;
+  const meal=$('aiForm').elements.ameal.value||'Meal 1';
+  const rows=draft.map(it=>{
+    const a=amtText(it);
+    return {id:newId(),date:cur,meal,name:(it.name+(a?' · '+a:'')).slice(0,80),kcal:Math.round(it.kcal),
+      p:it.p==null?null:r1(it.p),f:it.f==null?null:r1(it.f),c:it.c==null?null:r1(it.c)};
+  });
+  const beforeF=S.foods,beforeM=JSON.stringify(S.mine);
+  S.foods=S.foods.concat(rows);
+  for(const it of draft) if(it.src!=='you'||it.name!=='Calories') learn(it);
+  trimMine();
+  if(!save()){S.foods=beforeF;S.mine=JSON.parse(beforeM);return;}
+  lastMeal=meal;const n=rows.length;closeAi(true);toast('Added '+n+' food'+(n===1?'':'s')+' to '+meal);renderDay();
+}
+$('aiForm').addEventListener('submit',e=>{e.preventDefault();workItOut();});
+$('aiText').addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();workItOut();}});
+$('fixGo').addEventListener('click',fixInWords);
+$('fixText').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();fixInWords();}});
+$('rvAdd').addEventListener('click',confirmDraft);
+$('aiCancel').addEventListener('click',()=>closeAi(true));
+$('aiManual').addEventListener('click',()=>{
+  const t=$('aiText').value.trim(),meal=$('aiForm').elements.ameal.value;
+  closeAi(true);lastMeal=meal||lastMeal;openForm(null,t&&t.length<=80?{name:t,kcal:''}:null);
+  if(t) $('fKcal').focus({preventScroll:true});
+});
+
+/* ---------- my foods (settings) ---------- */
+function openMine(){
+  const list=S.mine.slice().sort((a,b)=>a.name.localeCompare(b.name));
+  const body=[el('p',{class:'hint',text:list.length?'Foods you’ve confirmed. Typing them in Add food uses these numbers, no AI needed. Tap one to change it.':'Nothing here yet. Foods you add get saved here, so next time they’re instant.'})];
+  const box=el('div',{});
+  for(const f of list) box.append(el('button',{type:'button',class:'mf-row',onclick:()=>editMine(f)},
+    el('div',{},el('b',{text:f.name}),el('span',{text:portionText(f)+(f.p!=null?' · P '+g1(f.p)+' F '+g1(f.f||0)+' C '+g1(f.c||0):'')})),
+    el('span',{class:'k',text:kc(f.kcal)})));
+  body.push(box);
+  closeSettings();openInfo('My foods ('+list.length+')',body);
+}
+function editMine(f){
+  const field=(label,key,type)=>{const i=el('input',{type,value:f[key]!=null?String(f[key]):'',inputmode:type==='number'?'decimal':null,min:type==='number'?'0':null,step:type==='number'?'any':null,maxlength:type==='text'?'80':null});return [el('label',{class:'f'},label,i),i];};
+  const [nL,nI]=field('Name','name','text'),[qL,qI]=field('Amount ('+f.unit+')','qty','number'),[kL,kI]=field('Calories (kcal)','kcal','number');
+  const [pL,pI]=field('Protein (g)','p','number'),[fL,fI]=field('Fat (g)','f','number'),[cL,cI]=field('Carbs (g)','c','number');
+  const aka=el('input',{type:'text',value:f.aka.join(', '),maxlength:'400'});
+  let armed=false;
+  const del=el('button',{type:'button',class:'danger',onclick:()=>{
+    if(!armed){armed=true;del.textContent='Tap again to delete';setTimeout(()=>{armed=false;del.textContent='Delete this food';},3500);return;}
+    S.mine=S.mine.filter(m=>m!==f);save();openMine();toast('Deleted');}},'Delete this food');
+  const saveB=el('button',{type:'button',class:'primary',onclick:()=>{
+    const k=num(kI.value),q=num(qI.value);
+    if(!nI.value.trim()){toast('Add a name.');return;}
+    if(k==null||k<0){toast('Add the calories.');return;}
+    const rec=cleanMine(Object.assign({},f,{name:nI.value,qty:q&&q>0?q:f.qty,kcal:k,p:num(pI.value),f:num(fI.value),c:num(cI.value),
+      lo:null,hi:null,aka:aka.value.split(',').map(s=>s.trim()).filter(Boolean),src:'me'}));
+    if(!rec) return;Object.assign(f,rec);save();openMine();toast('Saved');}},'Save');
+  openInfo('Edit food',[nL,el('div',{class:'row2'},qL,kL),el('div',{class:'row3'},pL,fL,cL),
+    el('label',{class:'f'},'Other names (comma separated)',aka),
+    el('p',{class:'hint',text:'Numbers are for the amount above. Other names help it match what you type.'}),saveB,del,
+    el('button',{type:'button',class:'ghost',onclick:openMine},'Back')]);
+}
+$('sMine').addEventListener('click',openMine);
 
 /* ---------- day details ---------- */
 function setDay(patch){
@@ -1111,6 +1606,7 @@ const SET_FIELDS=[['sName','name'],['sSex','sex'],['sAge','age'],['sHeight','hei
 let setReturn=null;
 function openSettings(){
   for(const [id,k] of SET_FIELDS) $(id).value=S.settings[k];
+  $('sAi').checked=!S.settings.aiOff;
   themeUI();
   setReturn=document.activeElement;$('setWrap').hidden=false;document.body.style.overflow='hidden';$('setClose').focus();
 }
@@ -1130,6 +1626,7 @@ $('setForm').addEventListener('submit',e=>{
     next[k]=n;
   }
   if(next.kcal<500){toast('Calorie target looks too low.');$('sKcal').focus();return;}
+  next.aiOff=!$('sAi').checked;
   const before=S.settings;S.settings=next;
   if(!save()){S.settings=before;return;}
   closeSettings();toast('Settings saved');view==='stats'?renderStats():renderDay();

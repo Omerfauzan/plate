@@ -11,6 +11,7 @@ Plate is a calorie and macro tracker web app (installable PWA), heading for the 
   - Today view: calorie ring, macro bars, "est" burn breakdown, week strip, meals grouped Meal 1 / Meal 2 / Snack, quick add, copy meal to today, weight / steps / gym per day
   - Stats: week / month / all time, 7-day average, running deficit, weight trend, macro split, weekday averages, top foods, "Worth a look" insights with a scale-vs-estimate check
   - Settings: targets, burn numbers, Auto / Light / Dark theme
+  - AI food entry (step 1, built): Add food takes plain words. Pieces that match My foods (`S.mine`) or the built-in `foods.json` are scaled locally with no AI; the rest go to the Cloudflare Worker in `worker/`. Review, edit, "fix in words", confirm saves to My foods. Worker URL goes in `AI_URL_DEFAULT` in `index.html` (`plate-ai-url` in localStorage overrides it for testing).
 - Burn = BMR x 1.2 + standing extra + max(0, steps - 3000) x kcal per step + gym. On target = within +/-10%. Fat change = deficit / 7700.
 
 ## AI rules
