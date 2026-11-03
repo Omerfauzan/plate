@@ -168,10 +168,31 @@ function toGeminiSchema(s) {
   return out;
 }
 
+// Error that carries a short, safe reason we can show (never the key).
+class AiError extends Error {
+  constructor(code, detail) { super(code); this.detail = detail || ''; }
+}
+async function googleMessage(res) {
+  try { const d = await res.json(); return String((d.error && (d.error.status + ': ' + d.error.message)) || '').slice(0, 200); } catch (e) { return ''; }
+}
+const GEMINI = 'https://generativelanguage.googleapis.com/v1beta/models/';
+const geminiModels = (env) => [...new Set([env.GEMINI_MODEL || 'gemini-2.5-flash', 'gemini-flash-latest'])];
+
 async function askGemini(prompt, env) {
-  if (!env.GEMINI_API_KEY) throw new Error('missing_key');
-  const model = env.GEMINI_MODEL || 'gemini-2.5-flash';
-  const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`, {
+  if (!env.GEMINI_API_KEY) throw new AiError('missing_key');
+  let last;
+  // If the model name has been retired (404), try Google's "latest flash" alias.
+  for (const model of geminiModels(env)) {
+    try { return await askGeminiModel(model, prompt, env); } catch (e) {
+      last = e;
+      if (!(e.detail && e.detail.startsWith('gemini 404'))) throw e;
+    }
+  }
+  throw last;
+}
+
+async function askGeminiModel(model, prompt, env) {
+  const res = await fetch(`${GEMINI}${encodeURIComponent(model)}:generateContent`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', 'x-goog-api-key': env.GEMINI_API_KEY },
     body: JSON.stringify({
@@ -184,16 +205,37 @@ async function askGemini(prompt, env) {
       },
     }),
   });
-  if (res.status === 429) throw new Error('provider_busy');
-  if (!res.ok) throw new Error('provider_error_' + res.status);
+  if (res.status === 429) throw new AiError('provider_busy', 'gemini 429 ' + (await googleMessage(res)));
+  if (!res.ok) throw new AiError('provider_error', `gemini ${res.status} ${model} ${await googleMessage(res)}`);
   const data = await res.json();
-  const parts = (data.candidates && data.candidates[0] && data.candidates[0].content && data.candidates[0].content.parts) || [];
-  const text = parts.map((p) => p.text || '').join('');
-  return JSON.parse(text);
+  const cand = data.candidates && data.candidates[0];
+  const parts = (cand && cand.content && cand.content.parts) || [];
+  const text = parts.filter((p) => !p.thought).map((p) => p.text || '').join('');
+  try { return JSON.parse(text); } catch (e) {
+    throw new AiError('bad_reply', `gemini ${model} gave no JSON (${(cand && cand.finishReason) || 'no answer'})`);
+  }
+}
+
+// Open https://<worker>/check in a browser to see if the key and model work.
+// Lists the model only (no AI request), so it doesn't use your daily quota.
+async function check(env) {
+  const out = { ok: false, provider: (env.PROVIDER || 'gemini').toLowerCase(), limits_bound: !!env.LIMITS };
+  if (out.provider === 'claude') { out.key_set = !!env.CLAUDE_API_KEY; out.ok = out.key_set; return out; }
+  out.key_set = !!env.GEMINI_API_KEY;
+  if (!out.key_set) { out.problem = 'GEMINI_API_KEY secret is missing'; return out; }
+  out.models = [];
+  for (const model of geminiModels(env)) {
+    const res = await fetch(GEMINI + encodeURIComponent(model), { headers: { 'x-goog-api-key': env.GEMINI_API_KEY } });
+    const r = { model, status: res.status };
+    if (!res.ok) r.problem = await googleMessage(res);
+    out.models.push(r);
+    if (res.ok) { out.ok = true; break; }
+  }
+  return out;
 }
 
 async function askClaude(prompt, env) {
-  if (!env.CLAUDE_API_KEY) throw new Error('missing_key');
+  if (!env.CLAUDE_API_KEY) throw new AiError('missing_key');
   const res = await fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
     headers: {
@@ -210,11 +252,11 @@ async function askClaude(prompt, env) {
       messages: [{ role: 'user', content: prompt }],
     }),
   });
-  if (res.status === 429 || res.status === 529) throw new Error('provider_busy');
-  if (!res.ok) throw new Error('provider_error_' + res.status);
+  if (res.status === 429 || res.status === 529) throw new AiError('provider_busy', 'claude ' + res.status);
+  if (!res.ok) throw new AiError('provider_error', 'claude ' + res.status);
   const data = await res.json();
   const block = (data.content || []).find((b) => b.type === 'tool_use');
-  if (!block) throw new Error('bad_reply');
+  if (!block) throw new AiError('bad_reply', 'claude gave no items');
   return block.input;
 }
 
@@ -253,7 +295,12 @@ export default {
     const origin = request.headers.get('Origin');
     const c = cors(origin, env);
     if (request.method === 'OPTIONS') return new Response(null, { status: c.ok ? 204 : 403, headers: c.headers });
-    if (request.method === 'GET') return reply({ ok: true, app: 'plate-ai' }, 200, c.headers);
+    if (request.method === 'GET') {
+      if (new URL(request.url).pathname === '/check') {
+        try { return reply(await check(env), 200, c.headers); } catch (e) { return reply({ ok: false, problem: String(e.message || e) }, 200, c.headers); }
+      }
+      return reply({ ok: true, app: 'plate-ai' }, 200, c.headers);
+    }
     if (request.method !== 'POST') return reply({ error: 'method' }, 405, c.headers);
     if (!c.ok) return reply({ error: 'origin' }, 403, c.headers);
 
@@ -281,9 +328,11 @@ export default {
       out = provider === 'claude' ? await askClaude(prompt, env) : await askGemini(prompt, env);
     } catch (e) {
       const msg = String((e && e.message) || e);
-      if (msg === 'provider_busy') return reply({ error: 'busy' }, 503, c.headers);
+      const detail = str(e && e.detail, 240);
+      console.log('ai error', msg, detail);
+      if (msg === 'provider_busy') return reply({ error: 'busy', detail }, 503, c.headers);
       if (msg === 'missing_key') return reply({ error: 'not_set_up' }, 500, c.headers);
-      return reply({ error: 'ai_failed' }, 502, c.headers);
+      return reply({ error: 'ai_failed', detail: detail || msg.slice(0, 120) }, 502, c.headers);
     }
     const items = (out && Array.isArray(out.items) ? out.items : []).slice(0, MAX_ITEMS).map(cleanItem).filter(Boolean);
     return reply({ items, note: str(out && out.note, 200), left: lim.left, provider }, 200, c.headers);

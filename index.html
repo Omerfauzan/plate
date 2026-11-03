@@ -1029,7 +1029,7 @@ function deviceId(){
   try{let d=localStorage.getItem('plate-device');if(!d){d='d-'+Math.random().toString(36).slice(2,12)+Date.now().toString(36);localStorage.setItem('plate-device',d);}return d;}
   catch(e){return 'd-nostorage-'+todayStr.replace(/-/g,'');}
 }
-class AiErr extends Error{constructor(kind){super(kind);this.kind=kind;}}
+class AiErr extends Error{constructor(kind,detail){super(kind);this.kind=kind;this.detail=detail||'';}}
 async function callAi(body){
   const url=aiUrl();
   if(!url) throw new AiErr('not_set_up');
@@ -1042,7 +1042,7 @@ async function callAi(body){
   let data=null;try{data=await res.json();}catch(e){}
   if(res.status===429) throw new AiErr('limit');
   if(res.status===503) throw new AiErr('busy');
-  if(!res.ok||!data||!Array.isArray(data.items)) throw new AiErr(data&&data.error==='not_set_up'?'not_set_up':'failed');
+  if(!res.ok||!data||!Array.isArray(data.items)) throw new AiErr(data&&data.error==='not_set_up'?'not_set_up':'failed',data&&data.detail?String(data.detail).slice(0,200):'HTTP '+res.status);
   return data;
 }
 const AI_MSG={
@@ -1135,7 +1135,7 @@ async function workItOut(){
     draft=out;renderDraft(data.note||'');
   }catch(e){
     draft=local;
-    renderDraft((AI_MSG[e.kind]||AI_MSG.failed)+(unknown.length?' Not found: '+unknown.join(', ')+'.':''));
+    renderDraft((AI_MSG[e.kind]||AI_MSG.failed)+(unknown.length?' Not found: '+unknown.join(', ')+'.':'')+(e.detail?' ('+e.detail+')':''));
   }finally{setBusy(false);}
 }
 async function fixInWords(){
@@ -1158,7 +1158,7 @@ async function fixInWords(){
     }
     if(!out.length){toast('That would remove everything. Tap Cancel to start over.');return;}
     draft=out;$('fixText').value='';openKey=null;renderDraft(data.note||'');
-  }catch(e){toast(AI_MSG[e.kind]||AI_MSG.failed);}
+  }catch(e){toast((AI_MSG[e.kind]||AI_MSG.failed)+(e.detail?' ('+e.detail+')':''));}
   finally{setBusy(false);}
 }
 const SRC_TXT={mine:'Your list','built-in':'Built-in',ai:'AI est',you:'Your number',edited:'Edited'};

@@ -60,6 +60,15 @@ Menu names on these sites move around a bit. If a button isn't exactly where it 
 1. In **plate-ai**, find the URL near the top, something like `https://plate-ai.yourname.workers.dev`.
 2. Open it in a browser. You should see `{"ok":true,"app":"plate-ai"}`.
 3. Send me that URL. It isn't secret, so it's fine to paste in chat and put in the app.
+4. Now open the same URL with **`/check`** on the end, e.g. `https://plate-ai.yourname.workers.dev/check`. This tests the key and the model without using any of your daily AI quota.
+   - `"ok":true` means it's all working.
+   - `"key_set":false` means the `GEMINI_API_KEY` secret is missing or misspelled.
+   - `"limits_bound":false` means the `LIMITS` KV binding is missing (step 4).
+   - Under `models`, `"problem"` shows what Google said, e.g. `API key not valid` (copy the key again from AI Studio) or `not found` (the model name changed; the worker already falls back to `gemini-flash-latest`).
+
+## If the app says "The AI didn't work this time"
+
+The message ends with the reason in brackets, straight from Google. Open `/check` (above) to see the same thing. You can also see every error in Cloudflare: **plate-ai** → **Logs** (or **Observability**) → **Begin log stream**, then try again in the app.
 
 That's it.
 
@@ -127,4 +136,4 @@ Reply:
 }
 ```
 
-Errors come back as `{ "error": "..." }`: `limit` (429, daily limit hit), `busy` (503, AI provider busy), `not_set_up` (key missing), `ai_failed`, `bad_text`, `origin`.
+Errors come back as `{ "error": "...", "detail": "..." }` (detail is the reason, never the key): `limit` (429, daily limit hit), `busy` (503, AI provider busy), `not_set_up` (key missing), `ai_failed`, `bad_text`, `origin`.
