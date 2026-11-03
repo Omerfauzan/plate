@@ -15,6 +15,8 @@
 //   DAILY_LIMIT      AI requests for the whole app per day, default 300
 // Binding: a KV namespace bound as LIMITS (holds the daily counters).
 
+// Bump when this file changes, so you can see which version is live at the worker URL.
+const VERSION = 4;
 const MAX_TEXT = 600;
 const MAX_ITEMS = 25;
 
@@ -172,8 +174,8 @@ function toGeminiSchema(s) {
 class AiError extends Error {
   constructor(code, detail) { super(code); this.detail = detail || ''; }
 }
-async function googleMessage(res) {
-  try { const d = await res.json(); return String((d.error && (d.error.status + ': ' + d.error.message)) || '').slice(0, 200); } catch (e) { return ''; }
+function googleMessage(raw) {
+  try { const d = JSON.parse(raw); return String((d.error && (d.error.status + ': ' + d.error.message)) || '').slice(0, 200); } catch (e) { return String(raw || '').slice(0, 120); }
 }
 const GEMINI = 'https://generativelanguage.googleapis.com/v1beta/models/';
 const geminiModels = (env) => [...new Set([env.GEMINI_MODEL || 'gemini-2.5-flash', 'gemini-flash-latest'])];
@@ -200,33 +202,37 @@ async function askGeminiModel(model, prompt, env) {
   const ctl = new AbortController();
   const timer = setTimeout(() => ctl.abort(), TIMEOUT_MS);
   const started = Date.now();
-  let res;
+  console.log('asking gemini', model);
+  let res, raw;
   try {
     res = await fetch(`${GEMINI}${encodeURIComponent(model)}:generateContent`, {
-    signal: ctl.signal,
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'x-goog-api-key': env.GEMINI_API_KEY },
-    body: JSON.stringify({
-      systemInstruction: { parts: [{ text: RULES }] },
-      contents: [{ role: 'user', parts: [{ text: prompt }] }],
-      generationConfig: {
-        temperature: 0.2,
-        responseMimeType: 'application/json',
-        responseSchema: toGeminiSchema(RESULT_SCHEMA),
-        ...thinkingOff(model),
-      },
-    }),
+      signal: ctl.signal,
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-goog-api-key': env.GEMINI_API_KEY },
+      body: JSON.stringify({
+        systemInstruction: { parts: [{ text: RULES }] },
+        contents: [{ role: 'user', parts: [{ text: prompt }] }],
+        generationConfig: {
+          temperature: 0.2,
+          responseMimeType: 'application/json',
+          responseSchema: toGeminiSchema(RESULT_SCHEMA),
+          ...thinkingOff(model),
+        },
+      }),
     });
+    raw = await res.text(); // inside the timeout too, in case the body is slow
   } catch (e) {
-    if (e && e.name === 'AbortError') throw new AiError('provider_slow', `gemini ${model} took over ${TIMEOUT_MS / 1000}s`);
+    console.log('gemini fetch failed', model, Date.now() - started + 'ms', String((e && e.message) || e));
+    if (ctl.signal.aborted) throw new AiError('provider_slow', `gemini ${model} took over ${TIMEOUT_MS / 1000}s`);
     throw new AiError('provider_error', `gemini ${model} fetch failed`);
   } finally {
     clearTimeout(timer);
   }
   console.log('gemini', model, res.status, Date.now() - started + 'ms');
-  if (res.status === 429) throw new AiError('provider_busy', 'gemini 429 ' + (await googleMessage(res)));
-  if (!res.ok) throw new AiError('provider_error', `gemini ${res.status} ${model} ${await googleMessage(res)}`);
-  const data = await res.json();
+  if (res.status === 429) throw new AiError('provider_busy', 'gemini 429 ' + googleMessage(raw));
+  if (!res.ok) throw new AiError('provider_error', `gemini ${res.status} ${model} ${googleMessage(raw)}`);
+  let data;
+  try { data = JSON.parse(raw); } catch (e) { throw new AiError('bad_reply', `gemini ${model} reply wasn't JSON`); }
   const cand = data.candidates && data.candidates[0];
   const parts = (cand && cand.content && cand.content.parts) || [];
   const text = parts.filter((p) => !p.thought).map((p) => p.text || '').join('');
@@ -238,7 +244,7 @@ async function askGeminiModel(model, prompt, env) {
 // Open https://<worker>/check in a browser to see if the key and model work.
 // Lists the model only (no AI request), so it doesn't use your daily quota.
 async function check(env) {
-  const out = { ok: false, provider: (env.PROVIDER || 'gemini').toLowerCase(), limits_bound: !!env.LIMITS };
+  const out = { ok: false, version: VERSION, provider: (env.PROVIDER || 'gemini').toLowerCase(), limits_bound: !!env.LIMITS };
   if (out.provider === 'claude') { out.key_set = !!env.CLAUDE_API_KEY; out.ok = out.key_set; return out; }
   out.key_set = !!env.GEMINI_API_KEY;
   if (!out.key_set) { out.problem = 'GEMINI_API_KEY secret is missing'; return out; }
@@ -246,7 +252,7 @@ async function check(env) {
   for (const model of geminiModels(env)) {
     const res = await fetch(GEMINI + encodeURIComponent(model), { headers: { 'x-goog-api-key': env.GEMINI_API_KEY } });
     const r = { model, status: res.status };
-    if (!res.ok) r.problem = await googleMessage(res);
+    if (!res.ok) r.problem = googleMessage(await res.text());
     out.models.push(r);
     if (res.ok) { out.ok = true; break; }
   }
@@ -318,7 +324,7 @@ export default {
       if (new URL(request.url).pathname === '/check') {
         try { return reply(await check(env), 200, c.headers); } catch (e) { return reply({ ok: false, problem: String(e.message || e) }, 200, c.headers); }
       }
-      return reply({ ok: true, app: 'plate-ai' }, 200, c.headers);
+      return reply({ ok: true, app: 'plate-ai', version: VERSION }, 200, c.headers);
     }
     if (request.method !== 'POST') return reply({ error: 'method' }, 405, c.headers);
     if (!c.ok) return reply({ error: 'origin' }, 403, c.headers);
@@ -337,6 +343,7 @@ export default {
     if (!/^[a-z0-9-]{8,64}$/i.test(device)) return reply({ error: 'bad_device' }, 400, c.headers);
 
     const ip = request.headers.get('CF-Connecting-IP') || 'unknown';
+    console.log('plate-ai v' + VERSION, body.mode || 'parse');
     const lim = await checkLimits(env, device, ip);
     if (!lim.ok) return reply({ error: 'limit', why: lim.why }, 429, c.headers);
 
