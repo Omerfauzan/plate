@@ -4,9 +4,9 @@
 // The API key lives here as a Cloudflare secret. It is never sent to the app.
 //
 // Settings (Cloudflare dashboard > Worker > Settings > Variables and Secrets):
-//   GEMINI_API_KEY   secret, required while PROVIDER is gemini
-//   CLAUDE_API_KEY   secret, only needed if PROVIDER is claude
-//   PROVIDER         "gemini" (default) or "claude"
+//   CLAUDE_API_KEY   secret, required while PROVIDER is claude (the default)
+//   GEMINI_API_KEY   secret, only needed if PROVIDER is gemini
+//   PROVIDER         "claude" (default) or "gemini"
 //   GEMINI_MODEL     default "gemini-flash-latest" (Google's current Flash model)
 //   CLAUDE_MODEL     default "claude-haiku-5-5"
 //   ALLOWED_ORIGINS  comma list, default "https://omerfauzan.github.io"
@@ -16,7 +16,7 @@
 // Binding: a KV namespace bound as LIMITS (holds the daily counters).
 
 // Bump when this file changes, so you can see which version is live at the worker URL.
-const VERSION = 5;
+const VERSION = 6;
 const MAX_TEXT = 600;
 const MAX_ITEMS = 25;
 
@@ -155,7 +155,7 @@ Set changed=false on every item.`;
 }
 
 // ---------- providers ----------
-// Both return the parsed JSON object. To switch, set PROVIDER and add that key.
+// Both return the parsed JSON object. Claude is the default; set PROVIDER to gemini to switch back.
 
 function toGeminiSchema(s) {
   const out = { type: s.type.toUpperCase() };
@@ -257,8 +257,17 @@ async function askGeminiModel(model, prompt, env, noThinking) {
 // Open https://<worker>/check in a browser to see if the key and model work.
 // Lists the model only (no AI request), so it doesn't use your daily quota.
 async function check(env) {
-  const out = { ok: false, version: VERSION, provider: (env.PROVIDER || 'gemini').toLowerCase(), limits_bound: !!env.LIMITS };
-  if (out.provider === 'claude') { out.key_set = !!env.CLAUDE_API_KEY; out.ok = out.key_set; return out; }
+  const out = { ok: false, version: VERSION, provider: (env.PROVIDER || 'claude').toLowerCase(), limits_bound: !!env.LIMITS };
+  if (out.provider === 'claude') {
+    out.key_set = !!env.CLAUDE_API_KEY;
+    if (!out.key_set) { out.problem = 'CLAUDE_API_KEY secret is missing'; return out; }
+    const model = claudeModel(env);
+    const res = await fetch(CLAUDE_URL + 'models/' + encodeURIComponent(model), { headers: claudeHeaders(env) });
+    out.model = model;
+    out.status = res.status;
+    if (res.ok) out.ok = true; else out.problem = claudeMessage(await res.text());
+    return out;
+  }
   out.key_set = !!env.GEMINI_API_KEY;
   if (!out.key_set) { out.problem = 'GEMINI_API_KEY secret is missing'; return out; }
   out.models = [];
@@ -281,30 +290,68 @@ async function check(env) {
   return out;
 }
 
+// Claude needs additionalProperties:false on every object for structured outputs.
+function strictSchema(x) {
+  const o = { ...x };
+  if (o.properties) {
+    o.properties = Object.fromEntries(Object.entries(o.properties).map(([k, v]) => [k, strictSchema(v)]));
+    o.additionalProperties = false;
+  }
+  if (o.items) o.items = strictSchema(o.items);
+  return o;
+}
+const CLAUDE_URL = 'https://api.anthropic.com/v1/';
+const claudeHeaders = (env) => ({ 'Content-Type': 'application/json', 'x-api-key': env.CLAUDE_API_KEY, 'anthropic-version': '2026-10-21' });
+const claudeModel = (env) => env.CLAUDE_MODEL || 'claude-haiku-5-5';
+function claudeMessage(raw) {
+  try { const d = JSON.parse(raw); return String((d.error && (d.error.type + ': ' + d.error.message)) || '').slice(0, 200); } catch (e) { return String(raw || '').slice(0, 120); }
+}
+
 async function askClaude(prompt, env) {
   if (!env.CLAUDE_API_KEY) throw new AiError('missing_key');
-  const res = await fetch('https://api.anthropic.com/v1/messages', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'x-api-key': env.CLAUDE_API_KEY,
-      'anthropic-version': '2023-06-01',
-    },
-    body: JSON.stringify({
-      model: env.CLAUDE_MODEL || 'claude-haiku-5-5',
-      max_tokens: 2000,
-      system: RULES,
-      tools: [{ name: 'food_items', description: 'Return the food items', input_schema: RESULT_SCHEMA }],
-      tool_choice: { type: 'tool', name: 'food_items' },
-      messages: [{ role: 'user', content: prompt }],
-    }),
-  });
-  if (res.status === 429 || res.status === 529) throw new AiError('provider_busy', 'claude ' + res.status);
-  if (!res.ok) throw new AiError('provider_error', 'claude ' + res.status);
-  const data = await res.json();
-  const block = (data.content || []).find((b) => b.type === 'tool_use');
-  if (!block) throw new AiError('bad_reply', 'claude gave no items');
-  return block.input;
+  const model = claudeModel(env);
+  const ctl = new AbortController();
+  const timer = setTimeout(() => ctl.abort(), TIMEOUT_MS);
+  const started = Date.now();
+  console.log('asking claude', model);
+  let res, raw;
+  try {
+    res = await fetch(CLAUDE_URL + 'messages', {
+      signal: ctl.signal,
+      method: 'POST',
+      headers: claudeHeaders(env),
+      body: JSON.stringify({
+        model,
+        max_tokens: 4000,
+        system: RULES,
+        messages: [{ role: 'user', content: prompt }],
+        // Structured outputs: the reply is guaranteed to be JSON matching the schema.
+        // Low effort keeps it quick; food estimates don't need deep thinking.
+        output_config: { effort: 'low', format: { type: 'json_schema', schema: strictSchema(RESULT_SCHEMA) } },
+      }),
+    });
+    raw = await res.text();
+  } catch (e) {
+    console.log('claude fetch failed', model, Date.now() - started + 'ms', String((e && e.message) || e));
+    if (ctl.signal.aborted) throw new AiError('provider_slow', `claude ${model} took over ${TIMEOUT_MS / 1000}s`);
+    throw new AiError('provider_error', `claude ${model} fetch failed`);
+  } finally {
+    clearTimeout(timer);
+  }
+  console.log('claude', model, res.status, Date.now() - started + 'ms');
+  if (res.status === 429 || res.status === 529) throw new AiError('provider_busy', `claude ${res.status} ${claudeMessage(raw)}`);
+  if (!res.ok) {
+    console.log('claude problem', model, claudeMessage(raw));
+    throw new AiError('provider_error', `claude ${res.status} ${model} ${claudeMessage(raw)}`);
+  }
+  let data;
+  try { data = JSON.parse(raw); } catch (e) { throw new AiError('bad_reply', `claude ${model} reply wasn't JSON`); }
+  if (data.stop_reason === 'refusal') throw new AiError('bad_reply', `claude ${model} declined this one`);
+  if (data.stop_reason === 'max_tokens') throw new AiError('bad_reply', `claude ${model} ran out of room, try fewer foods at once`);
+  const text = (data.content || []).filter((b) => b.type === 'text').map((b) => b.text).join('');
+  try { return JSON.parse(text); } catch (e) {
+    throw new AiError('bad_reply', `claude ${model} gave no JSON (${data.stop_reason || 'no answer'})`);
+  }
 }
 
 // ---------- daily limits ----------
@@ -369,7 +416,7 @@ export default {
     const lim = await checkLimits(env, device, ip);
     if (!lim.ok) return reply({ error: 'limit', why: lim.why }, 429, c.headers);
 
-    const provider = (env.PROVIDER || 'gemini').toLowerCase();
+    const provider = (env.PROVIDER || 'claude').toLowerCase();
     let out;
     try {
       const prompt = buildPrompt(body);

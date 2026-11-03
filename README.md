@@ -111,9 +111,9 @@ Your log is saved in your phone's browser storage. The only thing that ever leav
 - The backup includes My foods.
 
 **About the AI**
-- When you type a food that isn't in your list, the text goes to Google's Gemini AI through a small Plate server (a Cloudflare Worker). Plate asks before the first time.
+- When you type a food that isn't in your list, the text goes to Anthropic's Claude AI (Claude Haiku) through a small Plate server (a Cloudflare Worker). Plate asks before the first time.
 - Only the food text is sent, plus matching foods from your list. Never your name, weight or log.
-- Google's free AI tier may use what's sent to improve its products, so don't type anything private.
+- Anthropic doesn't use it to train its AI. Still, don't type anything private.
 - There's a limit of 30 AI requests per phone per day. Foods in your list don't count.
 - Turn it off in Settings → Food entry. Then only foods in your list are found.
 - All numbers are estimates, not medical advice.
@@ -128,7 +128,7 @@ No frameworks and no build step, just plain HTML, CSS and JavaScript.
 | `sw.js` | Service worker that caches the app so it opens instantly and works offline |
 | `foods.json` | The built-in food list (edit it to add or fix foods) |
 | `worker/worker.js` | The Cloudflare Worker that holds the AI key, checks replies and limits use |
-| `worker/README.md` | Step-by-step setup for Cloudflare and the Gemini key |
+| `worker/README.md` | Step-by-step setup for Cloudflare and the Claude API key |
 | `manifest.webmanifest` | Lets phones install it as an app (name, colours, icons) |
 | `icon-180.png`, `icon-192.png`, `icon-512.png` | App icons |
 | `docs/screenshots/` | Images for this README |
